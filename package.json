@@ -1,0 +1,30 @@
+{
+  "name": "ops-webtask",
+  "version": "1.0.0",
+  "description": "A (conceptual) clone of Auth0's WebTask.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js --exec babel-node --presets es2015,stage-2"
+  },
+  "keywords": [],
+  "author": "Jørgen Skogmo <js@base.io> (http://base.io/)",
+  "license": "ISC",
+  "dependencies": {
+    "babel": "^6.5.2",
+    "babel-core": "^6.14.0",
+    "body-parser": "^1.15.2",
+    "chalk": "^1.1.3",
+    "cors": "^2.8.1",
+    "express": "^4.14.0",
+    "formidable": "^1.0.17",
+    "glob": "^7.0.6",
+    "mkdirp": "^0.5.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-stage-2": "^6.13.0",
+    "nodemon": "^1.10.2"
+  }
+}

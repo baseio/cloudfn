@@ -1,0 +1,1 @@
+return (ctx, cb) => cb(null, 'ok')
