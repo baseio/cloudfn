@@ -8,6 +8,8 @@ var bodyParser  = require('body-parser');
 var formidable  = require('formidable');
 var verify      = require('./lib/verify');
 
+var jsdb        = require('./lib/jsdb');
+
 let tasks       = {};
 let port        = process.env.port || 3001;
 let app         = express();
