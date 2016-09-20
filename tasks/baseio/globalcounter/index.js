@@ -1,5 +1,7 @@
-return (ctx, cb) => {
-    ctx.counter ++;
-    console.log('ctx.counter', ctx.counter );
-    cb(null, {counter: ctx.counter });
+return (context, req, res, next) => {
+    context.store.counter = context.store.counter || 0;
+    context.store.counter++;
+    console.log('context.store.counter', context.store.counter );
+    res.json({counter: context.store.counter});
+    next();
 }

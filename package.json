@@ -1,6 +1,6 @@
 {
   "name": "ops-webtask",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "A (conceptual) clone of Auth0's WebTask.",
   "main": "server.js",
   "scripts": {
@@ -19,7 +19,8 @@
     "express": "^4.14.0",
     "formidable": "^1.0.17",
     "glob": "^7.0.6",
-    "mkdirp": "^0.5.1"
+    "mkdirp": "^0.5.1",
+    "moment": "^2.15.0"
   },
   "devDependencies": {
     "babel-cli": "^6.14.0",
