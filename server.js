@@ -12,7 +12,7 @@ var verify      = require('./lib/verify');
 var jsdb        = require('./lib/jsdb');
 
 let tasks       = {};
-let port        = process.env.port || 3001;
+let port        = process.env.port || 3033;
 let app         = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -57,6 +57,10 @@ app.post('/add/:user/:script', (req,res) => {
                 var msg = "Added!";
                 console.log(msg);
                 res.send(msg); 
+            }else{
+
+                console.log( chalk.red('verify() Error:'), err);
+
             }
         });
     });
@@ -69,9 +73,8 @@ function mount(user, script, source){
     tasks[user][script]         = tasks[user][script] || {};
     tasks[user][script].code    = source;
     tasks[user][script].context = create_ctx();
-
-    app.get(`/${user}/${script}`, function(req, res){
-        console.log( chalk.green(' Calling'), req.url );
+    tasks[user][script].fn      = function(req, res){
+        console.log( chalk.green(' Calling'), req.method, req.url );
 
         var timestamp = moment();
 
@@ -105,7 +108,11 @@ function mount(user, script, source){
             }
 
         });
-    });
+    };
+
+    app.get(`/${user}/${script}`, tasks[user][script].fn);
+    app.post(`/${user}/${script}`, tasks[user][script].fn);
+    
 }
 
 

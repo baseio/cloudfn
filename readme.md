@@ -126,6 +126,17 @@ More log interfaces is planned. [LINK TO ISSUE]
 
 ---
 
+## Infrastructure
+
+`(WIP)`
+
+So, we need to host this somewhere.
+The usual ./up.sh or ./deploy.sh are ok...
+
+
+
+----
+
 
 ## User Stories
 
