@@ -1,8 +1,10 @@
-# OpsTask (opvask?)
+# cloudfn
 
-Inspired by services like Amazon [Lambda]() and Auth0's [WebTask](), `name` enables us to run javascript in the cloud.  
+Short for "cloud function", cloudfn is a {yeah, this is the hard part}.
+
 
 Theres a few parts in play:
+
 - a javasscript file exporting a function with a (context, req, res) signature
 - the context, req, res. See below.
 - a CLI to CRUD scripts to your 'account'

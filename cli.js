@@ -17,7 +17,8 @@ if( !source_file ){
 
 var user    = 'baseio';
 var app     =  source_file.split('/').slice(-1)[0].split('.').slice(0,-1).join('.');
-var remote  = 'http://127.0.0.1:3033/add/'+ user +'/'+ app;
+//var remote  = 'http://127.0.0.1:3033/add/'+ user +'/'+ app;
+var remote  = 'http://139.59.142.129:3033/add/'+ user +'/'+ app;
 
 
 var formData = {
