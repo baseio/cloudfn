@@ -6,10 +6,22 @@ var cors        = require('cors');
 var mkdirp      = require('mkdirp');
 var moment      = require('moment');
 var bodyParser  = require('body-parser');
-var formidable  = require('formidable');
-var verify      = require('./lib/verify');
+//var formidable  = require('formidable');
+var formidable  = require('express-formidable');
+var moment      = require('moment');
+var path        = require('path');
 
-var jsdb        = require('./lib/jsdb');
+//var verify      = require('./lib/verify');
+var cloudfn     = require('./lib.cloudfn.js');
+var pack        = require('./package.json');
+
+var pino        = require('pino');
+var pretty = pino.pretty()
+pretty.pipe(process.stdout)
+var log = pino({
+  name: 'cloudfn',
+  safe: true
+}, pretty);
 
 let tasks       = {};
 let port        = process.env.port || 3033;
@@ -18,170 +30,145 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(cors());
+app.use(formidable());
 app.disable('x-powered-by');
 
+
 /// todo
-/// - user auth
-/// - logging
-/// - add good things to context
+/// - logging (via pub-sub > file >> websocket)
+/// - add good things to context (via plugins?)
+/// - secure node.js (docker? unpriviliged user...)
+
+//
+// PLANNING
+// logs [appname/scriptname]
+// set
+// dis [user/app/script]
+// en  [user/app/script]
+// status [user/app/script]
+
+// API Context wishlist:
+// Database (gun?)
+// file reader (CSV, csv2json, ...)
+// Emailer
+// SMS'er
+
+// Premium
+// Admin
+
+var usersfile = __dirname + '/users.json';
+var users = users_load();
+console.dir( users );
+/*
+{
+    'js': {
+        username: 'js',
+        email: 'js@base.io',
+        hash: '5d63e4a1ceeb6a83f8a3ef8f85e09955dcc4ecb75ba6e3bca376a5c502023ea0',
+        p: true,
+    },
+}
+*/
 
 app.listen(port, () => {
     console.log( chalk.yellow('Listining on port '), port);
 });
 
-app.post('/add/:user/:script', (req,res) => {
-    var form = new formidable.IncomingForm();
+app.get('/version', (req, res) => {
+    res.send( pack.name +", v."+ pack.version );
+    res.end();
+});
 
-    form.parse(req, function(err, fields, files) {
-        var file = files['js_file'];
-        if( !file ){
-            var msg = "No source file received... usage:...";
-            console.log(msg);
-            res.send(msg);
-            return;
+function users_load(){
+    return JSON.parse(fs.readFileSync(usersfile).toString() );
+}
+function users_save(){
+    fs.writeFileSync(usersfile, JSON.stringify(users, null, '    '));
+}
+
+
+app.get('/ls/:user/:hash', (req, res) => {
+    if( !verify_user(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
+
+    //console.log("TODO: ls", Object.keys( cloudfn.tasks.list[req.params.user] ));
+
+    send_msg(res, "ls", Object.keys( cloudfn.tasks.list[req.params.user] ));
+});
+
+app.get('/u/:user/:hash', (req, res) => {
+
+    log.info({user:req.params.user, hash:req.params.hash, fields:req.fields});
+    
+    console.log("current users:", users );
+
+    // if username exists, the hash *must* match - otherwise anyone can disable an account by chaninging its email
+    if( Object.keys(users).indexOf(req.params.user) > -1 ){
+        if( verify_user(req.params.user, req.params.hash) ){
+            // credentials match
+            send_msg(res, 'allow');
+        }else{
+            // credentials does not match
+            var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            log.warn("USER_VERIFICATION_ERROR @ /u/"+ req.params.user +" @ ip:"+ ip );
+            send_msg(res, 'deny');
         }
-        var user    = req.params.user;
-        var script  = req.params.script;
-        var source  = fs.readFileSync( file.path ).toString();
+    }else{
+        // username does not exist, create new user
+        users[req.params.user] = {
+            username : req.params.user, 
+            email    : req.fields.email,
+            hash     : req.params.hash,
+            state    : 'enabled', //TODO: new = needs email verification | enabled = ok | disbled = cant run | recovery = awaiting password reset
+            premium  : false, //TODO
+            created_at: moment().toISOString()
+        };
+        users_save();
+        log.warn("USER_CREATE @ /u/"+ req.params.user +" @ ip:"+ ip );
+        send_msg(res, 'new');
+    }
+});
 
-        verify(source, (err, code) => {
-            if( !err && code ){
 
-                var file = __dirname + '/tasks/'+ user +'/'+ script; 
-                mkdirp(file, function (err) {
-                    if (err) console.error(err);
-                    fs.writeFileSync( file +'/index.js', code);
-                });
+app.post('/a/:user/:hash', (req, res) => {
+    log.info({user:req.params.user, hash:req.params.hash, fields:req.fields, files:req.files});
+    
+    if( !verify_user(req.params.user, req.params.hash) ){
+        return send_msg(res, 'deny');
+    }
 
-                mount(user, script, code);
-                var msg = "Added!";
-                console.log(msg);
-                res.send(msg); 
-            }else{
+    var user    = req.params.user;
+    var script  = req.fields.name;
+    var tmpfile = req.files['file'].path;
 
-                console.log( chalk.red('verify() Error:'), err);
-
-            }
-        });
+    cloudfn.tasks.add(app, user, script, tmpfile, (ok) => {
+        if( ok ){
+            send_msg(res, 'SCRIPT_ADDED_SUCCESS:'+ 'https://cloudfn.stream/'+ user +'/'+ script);
+        }else{
+            send_msg(res, 'SCRIPT_VERIFICATION_ERROR');
+        }
     });
 });
 
-function mount(user, script, source){
 
-    console.log( chalk.green(' Enabled'), user, script);
-    tasks[user]                 = tasks[user] || {};
-    tasks[user][script]         = tasks[user][script] || {};
-    tasks[user][script].code    = source;
-    tasks[user][script].context = create_ctx();
-    tasks[user][script].fn      = function(req, res){
-        console.log( chalk.green(' Calling'), req.method, req.url );
 
-        var timestamp = moment();
-
-        restore_context(user+'/'+script, (err, data) => {
-            if (err) throw err;
-
-            console.log("#1 data", data );
-
-            tasks[user][script].context = Object.assign({}, tasks[user][script].context, {store:data} );
-            console.log('ctx',  tasks[user][script].context);
-
-            res.header('x-runtime-ms', moment().diff(timestamp) );
-
-            try{
-                tasks[user][script].code(tasks[user][script].context, req, res, (err, result) => {
-                    if( err ){
-                        console.log( chalk.red('         Error:'), err );
-                    }else{
-                        if( result === undefined ){
-                            console.log( chalk.green('         done'));
-                        }else{
-                            console.log( chalk.green('         done. Result:'), result );
-                        }
-                        persist_context(user+'/'+script, tasks[user][script].context.store );
-                    }
-                });
-            }catch(e){
-                //console.log( "Error running user code:") chalk.red(e) );
-                userland_error(user, script, e);
-                res.status(500).end();
-            }
-
-        });
-    };
-
-    app.get(`/${user}/${script}`, tasks[user][script].fn);
-    app.post(`/${user}/${script}`, tasks[user][script].fn);
-    
+function verify_user(username, hash){
+    //console.log(username, hash, users[username].hash)
+    var usr = users[username];
+    return usr ? usr.hash === hash : false;
 }
 
-
-function persist_context( path, store ){
-    return persist_context_fs(path, store);
-}
-function persist_context_fs(path, store){
-    var filename = "./tasks/"+ path +"/store.json";
-    console.log("< filename", filename);
-    fs.writeFile( filename, JSON.stringify(store) );
+function send_error(res, msg, data){
+    log.error("@send_error "+ msg);
+    res.status(500);
+    res.json({ok:false, msg:msg, data:data});
+    res.end();
 }
 
-function restore_context(path, cb){
-    restore_context_fs(path, cb);
-}
-function restore_context_fs(path, cb){
-    var filename = "./tasks/"+ path +"/store.json";
-    console.log("> filename", filename);
-    fs.readFile( filename, (err, data) => {
-        if (err) throw err;
-        cb(null, JSON.parse(data) || {} );
-    });
+function send_msg(res, msg, data){
+    log.info("@send_msg "+ msg);
+    res.status(200);
+    res.json({ok:true, msg:msg, data:data});
+    res.end();
 }
 
-function init_context(path){
-    return init_context_fs(path);
-}
-function init_context_fs(path){
-    var filename = "./tasks/"+ path +"/store.json";
-    console.log("+ filename", filename );
-    try {
-        fs.accessSync(filename);
-    }catch (e){
-        console.log("+ filename", chalk.red('does not exist') );
-        persist_context_fs(path, {} );
-    }
-}
-
-
-function userland_error(user, script, error){
-    console.log( chalk.red("Error in"), user+'/'+script, chalk.red( ""+error) );
-    var msg = [ moment().utc(), "Error running user code:", " User: "+ user, " Script: "+ script, error, "\n\n"];
-    fs.appendFile('error.log', msg.join("\n"));
-}
-
-function mount_tasks_fs(){
-    /// iterates ./tasks
-    
-    glob.sync( "./tasks/**/*.js", {} ).map( function(file){
-        //console.log("file:", file);       // ./tasks/baseio/minimal/index.js
-        var parts   = file.split('/');      // [ '.', 'tasks', 'baseio', 'minimal', 'index.js' ]  
-        var user    = parts[2];             // baseio
-        var script  = parts[3];             // minimal        
-        var source  = fs.readFileSync(file).toString();
-
-        verify(source, (err, code) => {
-            if( !err && code ){
-                mount(user, script, code);
-                /// init empty context.store if needed
-                init_context(user+'/'+script);
-            }
-        });
-    });
-}
-
-function create_ctx(req,res){
-    /// populates the pr.user context object
-    //return Object.assign({}, {version:'0.0.1'}, {counter:0}, req, res);
-    return Object.assign({}, {version:'0.0.1'}, {store:{}}, req, res);
-}
-
-mount_tasks_fs();
+cloudfn.tasks.load(app);

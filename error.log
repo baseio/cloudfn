@@ -159,3 +159,10 @@ Error running user code:
 ReferenceError: awid is not defined
 
 
+Tue Nov 22 2016 20:20:38 GMT+0000
+Error running user code:
+ User: js
+ Script: basic
+TypeError: Cannot read property 'call' of undefined
+
+

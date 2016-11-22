@@ -182,3 +182,20 @@ As a engineer, I would like my users code to
 	```
 	$ httail https://ops.base.io/user/kvt-test/logs
 	```
+
+
+----------
+
+context.redis.set, context.redis.get
+context.redis.publish, context.redis.subscribe
+
+are all prefixed with `appname`, so
+
+context.redis.set("key", "value") becomes context.redis.set("appname-key", value),
+and
+context.redis.get("key", "value") becomes context.redis.get("appname-key", value)
+
+
+-----------
+
+each appname has one postgres db available through context.postgres, where any number of tables can be added and used.

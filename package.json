@@ -1,6 +1,6 @@
 {
-  "name": "ops-webtask",
-  "version": "0.0.2",
+  "name": "cloudFn-system",
+  "version": "0.0.3",
   "description": "A (conceptual) clone of Auth0's WebTask.",
   "main": "server.js",
   "scripts": {
@@ -11,21 +11,16 @@
   "author": "Jørgen Skogmo <js@base.io> (http://base.io/)",
   "license": "ISC",
   "dependencies": {
-    "babel": "^6.5.2",
-    "babel-core": "^6.14.0",
     "body-parser": "^1.15.2",
     "chalk": "^1.1.3",
     "cors": "^2.8.1",
     "express": "^4.14.0",
+    "express-formidable": "^1.0.0",
     "formidable": "^1.0.17",
     "glob": "^7.0.6",
     "mkdirp": "^0.5.1",
-    "moment": "^2.15.0"
+    "moment": "^2.16.0",
+    "pino": "^3.0.1"
   },
-  "devDependencies": {
-    "babel-cli": "^6.14.0",
-    "babel-preset-es2015": "^6.14.0",
-    "babel-preset-stage-2": "^6.13.0",
-    "nodemon": "^1.10.2"
-  }
+  "devDependencies": {}
 }
