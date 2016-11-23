@@ -312,7 +312,8 @@ const API = {
 
 		console.log("@harvest req.headers:");
 		console.dir( req.headers, {colors:true} );
-		args.headers = req.headers || {};
+		//args.headers = req.headers || {};
+		args.origin = req.headers.referer || '';
 
 		console.log( "args:");
 		console.dir( args, {colors:true} );
