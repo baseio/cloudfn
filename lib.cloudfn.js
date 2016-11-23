@@ -310,6 +310,10 @@ const API = {
 		//console.dir( req.files, {colors:true} );
 		args.files = req.files || {};
 
+		console.log("@harvest req.headers:");
+		console.dir( req.headers, {colors:true} );
+		args.headers = request.headers || {};
+
 		console.log( "args:");
 		console.dir( args, {colors:true} );
 
