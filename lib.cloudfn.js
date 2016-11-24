@@ -32,6 +32,15 @@ const Utils = {
 			return false;
 		}
 		return true;
+	},
+
+	is_match: (str, rule) => {
+		// http://stackoverflow.com/a/32402438
+		let res = new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
+		console.log("@is_match", str, rule, " => ", res);
+
+		return res;
+		//return new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
 	}
 }
 module.exports.utils = Utils;
@@ -274,15 +283,35 @@ const API = {
 
 					if( opts.keys.indexOf(args.Auth) < 0 ){
 						this.send({"error":true, message:"access denied (keys)"});
-						//TODO: res.end();
 						return;
 					}else{
 						cb();
 					}
+				
 				}else if( opts.origins ){
 					// TODO
-				}
+					console.log("@auth origin:", opts.origins, args.origin );
 
+					let allow = false;
+					if( typeof opts.origins === 'string' ){ // single rule
+						allow = Utils.is_match(args.origin, opts.origins);
+					
+					}else if( typeof opts.origins === 'object'){ // multiple rules (array)
+						for(let i=0, len=opts.origins.length; i<len; i++){
+							let test = Utils.is_match(args.origin, opts.origins[i]);
+							if( test ) allow = true;
+						}
+					}
+					
+					if( !allow ){
+						this.send({"error":true, message:"access denied (origin)"});
+						return;
+					}else{
+						cb();
+					}
+				}else{
+					// what here??
+				}
 
 			}
 		}
@@ -314,6 +343,7 @@ const API = {
 		console.dir( req.headers, {colors:true} );
 		//args.headers = req.headers || {};
 		args.origin = req.headers.referer || '';
+		args.origin = 'xxhttps://cloudfn.github.io/website/'; // test
 
 		console.log( "args:");
 		console.dir( args, {colors:true} );
@@ -330,8 +360,20 @@ const API = {
 		//base.req = req;
 
 		base.send = (jsonObject) => {
-			res.json(jsonObject);
-			//base.res.json(jsonObject);
+
+			// obey return format from url-query
+			console.log("format?", args.query);
+			if( args.query.format ){
+				switch (args.query.format) {
+					case 'jsonp' : 
+						res.set('Content-Type', 'text/javascript');
+						res.send( 'var jsonp='+ JSON.stringify(jsonObject, null, '  ') );
+						break;
+				}
+			}else{
+				res.json(jsonObject);
+				//base.res.json(jsonObject);
+			}
 		}
 
 		return base;
