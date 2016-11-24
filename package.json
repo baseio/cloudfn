@@ -1,6 +1,6 @@
 {
   "name": "cloudFn-system",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A (conceptual) clone of Auth0's WebTask.",
   "main": "server.js",
   "scripts": {
