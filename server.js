@@ -185,15 +185,15 @@ function send_msg(res, msg = '', data = {}){
 // we do the mounting here:
 
 function load_tasks_from_file(expressApp){
-    console.log('load_tasks_from_file');
+    //console.log('load_tasks_from_file');
     glob.sync( './tasks/**/**/*.js', {} ).map( function(file){
         var parts   = file.split('/');      // [ '.', 'tasks', 'baseio', 'minimal', 'index.js' ]  
-        console.log("file:", file, parts);       // ./tasks/baseio/minimal/index.js
+        //console.log("file:", file, parts);       // ./tasks/baseio/minimal/index.js
         var user    = parts[2];             // baseio
         var script  = parts[3];             // minimal
         var index   = parts[4];             // index.js        
         var code    = fs.readFileSync(file).toString();
-        console.dir({user, script, file}, {colors:true});
+        //console.dir({user, script, file}, {colors:true});
 
         var jscode  = cloudfn.verify.compile(code);
         

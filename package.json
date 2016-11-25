@@ -2,10 +2,11 @@
   "name": "cloudFn-system",
   "version": "0.0.12",
   "description": "A (conceptual) clone of Auth0's WebTask.",
+  "repository": "https://github.com/cloudfn/system",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js --exec babel-node --presets es2015,stage-2"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "Jørgen Skogmo <js@base.io> (http://base.io/)",
