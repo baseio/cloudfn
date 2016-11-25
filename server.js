@@ -3,12 +3,10 @@ var chalk       = require('chalk');
 var glob        = require('glob');
 var fs          = require('fs');
 var cors        = require('cors');
-var mkdirp      = require('mkdirp');
 var moment      = require('moment');
 var bodyParser  = require('body-parser');
 //var formidable  = require('formidable');
 var formidable  = require('express-formidable');
-var moment      = require('moment');
 var path        = require('path');
 
 //var verify      = require('./lib/verify');
@@ -119,7 +117,7 @@ app.get('/u/:user/:hash', (req, res) => {
             hash     : req.params.hash,
             state    : 'enabled', //TODO: new = needs email verification | enabled = ok | disbled = cant run | recovery = awaiting password reset
             premium  : false, //TODO
-            created_at: moment().toISOString()
+            created_at: new Date().toISOString() //moment().toISOString()
         };
         users_save();
         log.warn("USER_CREATE @ /u/"+ req.params.user +" @ ip:"+ ip );
