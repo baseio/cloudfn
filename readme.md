@@ -199,3 +199,26 @@ context.redis.get("key", "value") becomes context.redis.get("appname-key", value
 -----------
 
 each appname has one postgres db available through context.postgres, where any number of tables can be added and used.
+
+
+
+
+/// some test
+
+Args
+
+URLs
+cfn call http://localhost:3033/js/counter/a/b/c
+
+URL Query Parameters:
+cfn call http://localhost:3033/js/counter?a=1
+cfn call http://localhost:3033/js/counter?c=2\&d=3
+
+FORM
+httpie wont play :|
+
+
+
+Using CLI:
+
+cfn callp http://localhost:3033/js/counter/x/y/z?m=n
