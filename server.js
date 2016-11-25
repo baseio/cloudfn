@@ -200,8 +200,8 @@ function load_tasks_from_file(expressApp){
         if( jscode ){
             cloudfn.tasks.mount(user, script, jscode);
 
-            expressApp.get(`/${user}/${script}/?*`,  cloudfn.tasks.list[user][script].fn);
-            //expressApp.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
+            expressApp.get(`/${user}/${script}/*`,  cloudfn.tasks.list[user][script].fn);
+            expressApp.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
 
             expressApp.post(`/${user}/${script}/*`, cloudfn.tasks.list[user][script].fn);
             expressApp.post(`/${user}/${script}`,   cloudfn.tasks.list[user][script].fn);
