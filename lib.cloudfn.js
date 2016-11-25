@@ -359,7 +359,7 @@ const Sandbox = {
 
 	clean: function(){
 		console.log("@sandbox clean()");
-	    var keep_process = ['nextTick', '_tickCallback', 'stdout', 'console', 'hrtime','emitWarning'];
+	    var keep_process = ['nextTick', '_tickCallback', 'stdout', 'console', 'hrtime', 'emitWarning', 'env'];
 	    var keep_this = ['console', 'process', 'Buffer', 'setImmediate'];
 	    Object.keys(this.process).map( (key) => {
 	        if( keep_process.indexOf(key) < 0 ) delete this.process[key];

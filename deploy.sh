@@ -16,7 +16,7 @@ cd "$RDIR"
 git pull origin master --quiet
 npm install
 
-#pm2 restart all
+pm2 restart all
 EOF
 
 
