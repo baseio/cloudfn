@@ -9,6 +9,7 @@ git commit -a -m "$VERSION" --quiet
 git push origin master --quiet
 npm version patch
 
+echo "Working on (remote) server: $SERVER"
 ssh root@$SERVER 'bash -s' << EOF
 
 cd "$RDIR"
