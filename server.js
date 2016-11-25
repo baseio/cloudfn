@@ -127,8 +127,24 @@ app.get('/u/:user/:hash', (req, res) => {
     }
 });
 
+app.post('/rm/:user/:hash', (req, res) => {
+    log.info({endpoint:'rm', user:req.params.user, fields:req.fields});
+
+    if( !verify_user(req.params.user, req.params.hash) ){
+        return send_msg(res, 'deny');
+    }
+
+    var user    = req.params.user;
+    var script  = req.fields.name;
+
+    cloudfn.tasks.remove(user, script);
+    
+    send_msg(res, "SCRIPT_REMOVAL_SUCCESS", Object.keys( cloudfn.tasks.list[req.params.user] ));
+    console.dir(cloudfn.tasks.list, {colors:true});
+});
+
 app.post('/a/:user/:hash', (req, res) => {
-    log.info({user:req.params.user, hash:req.params.hash, fields:req.fields, files:req.files});
+    log.info({endpoint:'a', user:req.params.user, fields:req.fields, files:req.files});
     
     if( !verify_user(req.params.user, req.params.hash) ){
         return send_msg(res, 'deny');
@@ -138,8 +154,11 @@ app.post('/a/:user/:hash', (req, res) => {
     var script  = req.fields.name;
     var tmpfile = req.files['file'].path;
 
-    cloudfn.tasks.add(app, user, script, tmpfile, (ok) => {
+    cloudfn.tasks.add(user, script, tmpfile, (ok) => {
         if( ok ){
+
+            add_routes(user,script);
+
             send_msg(res, 'SCRIPT_ADDED_SUCCESS:'+ 'https://cloudfn.stream/'+ user +'/'+ script);
         }else{
             send_msg(res, 'SCRIPT_VERIFICATION_ERROR');
@@ -177,6 +196,21 @@ function send_msg(res, msg = '', data = {}){
     res.end();
 }
 
+function add_routes(user,script){
+    app.get(`/${user}/${script}/*`,  cloudfn.tasks.list[user][script].fn);
+    app.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
+
+    app.post(`/${user}/${script}/*`, cloudfn.tasks.list[user][script].fn);
+    app.post(`/${user}/${script}`,   cloudfn.tasks.list[user][script].fn);
+
+    app._router.stack.map( (layer) => {
+        if( layer.route ){
+            let m = cloudfn.utils.rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
+            let p = layer.route.path;
+            console.log(m, p);
+        }
+    });
+}
 
 // cloudfn.tasks.load(app);
 
@@ -184,7 +218,7 @@ function send_msg(res, msg = '', data = {}){
 // and handle alll server-specific stuff *here* (in the server file),
 // we do the mounting here:
 
-function load_tasks_from_file(expressApp){
+function load_tasks_from_file(){
     //console.log('load_tasks_from_file');
     glob.sync( './tasks/**/**/*.js', {} ).map( function(file){
         var parts   = file.split('/');      // [ '.', 'tasks', 'baseio', 'minimal', 'index.js' ]  
@@ -199,24 +233,20 @@ function load_tasks_from_file(expressApp){
         
         if( jscode ){
             cloudfn.tasks.mount(user, script, jscode);
-
-            expressApp.get(`/${user}/${script}/*`,  cloudfn.tasks.list[user][script].fn);
-            expressApp.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
-
-            expressApp.post(`/${user}/${script}/*`, cloudfn.tasks.list[user][script].fn);
-            expressApp.post(`/${user}/${script}`,   cloudfn.tasks.list[user][script].fn);
+            add_routes(user, script);
         }
     });
 
     console.dir(cloudfn.tasks.list, {colors:true});
-
-    expressApp._router.stack.map( (layer) => {
+    /*
+    app._router.stack.map( (layer) => {
         if( layer.route ){
             let m = cloudfn.utils.rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
             let p = layer.route.path;
             console.log(m, p);
         }
     });
+    */
 }
 
-load_tasks_from_file(app);
+load_tasks_from_file();
