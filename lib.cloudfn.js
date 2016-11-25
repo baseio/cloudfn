@@ -1,6 +1,6 @@
 // js@base.io
 
-const VERSION 	= 'Rev. 5';
+const VERSION 	= '0.0.1-r6';
 
 const fs      	= require('fs');
 const path      = require('path');
