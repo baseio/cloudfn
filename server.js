@@ -69,6 +69,13 @@ console.dir( users );
     },
 }
 */
+function users_load(){
+    return JSON.parse(fs.readFileSync(usersfile).toString() );
+}
+function users_save(){
+    fs.writeFileSync(usersfile, JSON.stringify(users, null, '    '));
+}
+
 
 app.listen(port, () => {
     console.log( chalk.yellow('Listining on port '), port);
@@ -78,14 +85,6 @@ app.get('/version', (req, res) => {
     res.send( pack.name +", v."+ pack.version );
     res.end();
 });
-
-function users_load(){
-    return JSON.parse(fs.readFileSync(usersfile).toString() );
-}
-function users_save(){
-    fs.writeFileSync(usersfile, JSON.stringify(users, null, '    '));
-}
-
 
 app.get('/ls/:user/:hash', (req, res) => {
     if( !verify_user(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
@@ -128,7 +127,6 @@ app.get('/u/:user/:hash', (req, res) => {
     }
 });
 
-
 app.post('/a/:user/:hash', (req, res) => {
     log.info({user:req.params.user, hash:req.params.hash, fields:req.fields, files:req.files});
     
@@ -150,6 +148,14 @@ app.post('/a/:user/:hash', (req, res) => {
 });
 
 
+// https://cloudfn.stream/logs/js/counter/346PU346PUBC45723P7WB45884548EPQ
+app.get('/log/:user/:app/:hash', (req, res) => {
+    if( !verify_user(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
+
+    console.log("TODO: show log for", "user:", req.params.user, "app:", req.params.app);
+
+    send_msg(res, "logs todo");
+});
 
 function verify_user(username, hash){
     //console.log(username, hash, users[username].hash)
@@ -157,18 +163,60 @@ function verify_user(username, hash){
     return usr ? usr.hash === hash : false;
 }
 
-function send_error(res, msg, data){
+function send_error(res, msg = '', data = {}){
     log.error("@send_error "+ msg);
     res.status(500);
     res.json({ok:false, msg:msg, data:data});
     res.end();
 }
 
-function send_msg(res, msg, data){
+function send_msg(res, msg = '', data = {}){
     log.info("@send_msg "+ msg);
     res.status(200);
     res.json({ok:true, msg:msg, data:data});
     res.end();
 }
 
-cloudfn.tasks.load(app);
+
+// cloudfn.tasks.load(app);
+
+// as we want to keep the lib.cloudfn.js library clean,
+// and handle alll server-specific stuff *here* (in the server file),
+// we do the mounting here:
+
+function load_tasks_from_file(expressApp){
+    console.log('load_tasks_from_file');
+    glob.sync( './tasks/**/**/*.js', {} ).map( function(file){
+        var parts   = file.split('/');      // [ '.', 'tasks', 'baseio', 'minimal', 'index.js' ]  
+        console.log("file:", file, parts);       // ./tasks/baseio/minimal/index.js
+        var user    = parts[2];             // baseio
+        var script  = parts[3];             // minimal
+        var index   = parts[4];             // index.js        
+        var code    = fs.readFileSync(file).toString();
+        console.dir({user, script, file}, {colors:true});
+
+        var jscode  = cloudfn.verify.compile(code);
+        
+        if( jscode ){
+            cloudfn.tasks.mount(user, script, jscode);
+
+            expressApp.get(`/${user}/${script}/?*`,  cloudfn.tasks.list[user][script].fn);
+            //expressApp.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
+
+            expressApp.post(`/${user}/${script}/*`, cloudfn.tasks.list[user][script].fn);
+            expressApp.post(`/${user}/${script}`,   cloudfn.tasks.list[user][script].fn);
+        }
+    });
+
+    console.dir(cloudfn.tasks.list, {colors:true});
+
+    expressApp._router.stack.map( (layer) => {
+        if( layer.route ){
+            let m = cloudfn.utils.rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
+            let p = layer.route.path;
+            console.log(m, p);
+        }
+    });
+}
+
+load_tasks_from_file(app);

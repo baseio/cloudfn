@@ -1,6 +1,6 @@
-// js@base.io 161122
+// js@base.io
 
-const VERSION 	= 'Rev. 3';
+const VERSION 	= 'Rev. 4';
 
 const fs      	= require('fs');
 const path      = require('path');
@@ -10,25 +10,30 @@ const glob      = require('glob');
 
 module.exports.version = () => VERSION;
 
+/// The complete cloudfn service code library,
+/// shared between the CLI- and Server-app. 
+
+
+
 
 /// Utils
 
 const Utils = {
 
-	is_readable: (file) => {
+	is_readable: (file, silent=true) => {
 	    try {
 	        fs.accessSync(file, 'r');
 	        return true;
 	    }catch(e){
-	    	console.log("@utils is_readable(): Cant read file "+ file);
+	    	if( !silent) console.log("@utils is_readable(): Cant read file "+ file);
 	        return false;
 	    }
 	},
 	
-	is_javascript: (file) => {
+	is_javascript: (file, silent=true) => {
 		var info = path.parse(file);
 		if( info.ext !== '.js' ){
-			console.log("@utils is_javascript(): Only '.js' files accepted. (Got '"+ info.ext +"')");
+			if( !silent) console.log("@utils is_javascript(): Only '.js' files accepted. (Got '"+ info.ext +"')");
 			return false;
 		}
 		return true;
@@ -36,11 +41,16 @@ const Utils = {
 
 	is_match: (str, rule) => {
 		// http://stackoverflow.com/a/32402438
-		let res = new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
-		console.log("@is_match", str, rule, " => ", res);
+		return res = new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
+	},
 
-		return res;
-		//return new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
+	rightPad: (str, len) => {
+		if( str.length >= len) return str;
+
+		while(str.length < len ){
+			str += ' ';
+		}
+		return str;
 	}
 }
 module.exports.utils = Utils;
@@ -56,7 +66,7 @@ const Verify = {
 	        return (typeof jscode === 'function') ? jscode : false;
 	        
 	    } catch (e) {
-	        console.log('Unable to compile script:', e.toString());
+	        console.log('@verify.compile(): Unable to compile script:', e.toString());
 	        return false;
 	    }
 	},
@@ -70,7 +80,7 @@ const Verify = {
 
 		let jscode = Verify.compile(safecode);
 		if( !jscode ){
-			console.log("@verify.rawfile compile failed. file: '"+ file +"'");
+			console.log("@verify.rawfile(): Compile failed. file: '"+ file +"'");
 			return false;
 		} 
 
@@ -85,7 +95,7 @@ module.exports.verify = Verify;
 const Store = {
 	init: (path) => {
 		var filename = "./tasks/"+ path +"/store.json";
-		if( !Utils.is_readable(filename) ){
+		if( !Utils.is_readable(filename, true) ){
 			fs.writeFileSync( filename, '{}' );
 		}
 	},
@@ -129,35 +139,8 @@ var Tasks = {
         });
 	},
 
-	load: (expressApp) => {
-	    glob.sync( './tasks/**/**/*.js', {} ).map( function(file){
-	        var parts   = file.split('/');      // [ '.', 'tasks', 'baseio', 'minimal', 'index.js' ]  
-	        //console.log("file:", file, parts);       // ./tasks/baseio/minimal/index.js
-	        var user    = parts[2];             // baseio
-	        var appname = parts[3];             // minimal
-	        var script  = parts[4];             // index.js        
-	        var code    = fs.readFileSync(file).toString();
-	        //console.dir({user, appname, script, code}, {colors:true});
+	mount: (user, script, jscode) => {
 
-	        var jscode  = Verify.compile(code);
-	        
-	        if( jscode ){
-	           Tasks._mount(expressApp, user, appname, jscode);
-	        }
-	    });
-
-	    console.dir(Tasks.list, {colors:true});
-
-	    expressApp._router.stack.map( (layer) => {
-	    	if( layer.route ){
-	    		let m = rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
-	    		let p = layer.route.path;
-	    		console.log(m, p);
-	    	}
-	    });
-	},
-
-	_mount: (expressApp, user, script, jscode) => {
 		Store.init( user+'/'+script );
 
 		Tasks.list[user]                 = Tasks.list[user] || {};
@@ -171,27 +154,12 @@ var Tasks = {
 	        Runner.task( Tasks.list[user][script].code, req, res, dataroot);
 	    };
 
-	    expressApp.get(`/${user}/${script}/*`,  Tasks.list[user][script].fn);
-	    expressApp.get(`/${user}/${script}`,    Tasks.list[user][script].fn);
-
-        expressApp.post(`/${user}/${script}/*`, Tasks.list[user][script].fn);
-        expressApp.post(`/${user}/${script}`,   Tasks.list[user][script].fn);
-
         console.dir(Tasks.list, {colors:true});
 	    return true;
 	}
 
 }
 module.exports.tasks = Tasks;
-
-function rightPad(str, len){
-	if( str.length >= len) return str;
-
-	while(str.length < len ){
-		str += ' ';
-	}
-	return str;
-}
 
 
 /// Runner
@@ -343,7 +311,7 @@ const API = {
 		console.dir( req.headers, {colors:true} );
 		//args.headers = req.headers || {};
 		args.origin = req.headers.referer || '';
-		args.origin = 'xxhttps://cloudfn.github.io/website/'; // test
+		//args.origin = 'https://cloudfn.github.io/website/'; // test
 
 		console.log( "args:");
 		console.dir( args, {colors:true} );
