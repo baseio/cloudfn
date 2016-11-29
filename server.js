@@ -5,13 +5,18 @@ var fs          = require('fs');
 var cors        = require('cors');
 var moment      = require('moment');
 var bodyParser  = require('body-parser');
-//var formidable  = require('formidable');
 var formidable  = require('express-formidable');
 var path        = require('path');
 
-//var verify      = require('./lib/verify');
 var cloudfn     = require('./lib.cloudfn.js');
 var pack        = require('./package.json');
+
+cloudfn.api.init();
+cloudfn.users.load();
+
+cloudfn.api.test();
+
+//return;
 
 var pino        = require('pino');
 var pretty = pino.pretty()
@@ -35,72 +40,41 @@ app.disable('x-powered-by');
 /// todo
 /// - logging (via pub-sub > file >> websocket)
 /// - add good things to context (via plugins?)
-/// - secure node.js (docker? unpriviliged user...)
-
-//
-// PLANNING
-// logs [appname/scriptname]
-// set
-// dis [user/app/script]
-// en  [user/app/script]
-// status [user/app/script]
-
-// API Context wishlist:
-// Database (gun?)
-// file reader (CSV, csv2json, ...)
-// Emailer
-// SMS'er
-
-// Premium
-// Admin
-
-var usersfile = __dirname + '/users.json';
-var users = users_load();
-console.dir( users );
-/*
-{
-    'js': {
-        username: 'js',
-        email: 'js@base.io',
-        hash: '5d63e4a1ceeb6a83f8a3ef8f85e09955dcc4ecb75ba6e3bca376a5c502023ea0',
-        p: true,
-    },
-}
-*/
-function users_load(){
-    return JSON.parse(fs.readFileSync(usersfile).toString() );
-}
-function users_save(){
-    fs.writeFileSync(usersfile, JSON.stringify(users, null, '    '));
-}
 
 
 app.listen(port, () => {
     console.log( chalk.yellow('Listining on port '), port);
 });
 
+/// Display system version
 app.get('/version', (req, res) => {
     res.send( pack.name +", v."+ pack.version );
     res.end();
 });
 
-app.get('/ls/:user/:hash', (req, res) => {
-    if( !verify_user(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
+/// List the users' scripts
+app.get('/@/ls/:user/:hash', (req, res) => {
+    //if( !verify_user(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
+    if( !cloudfn.users.verify(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
 
-    //console.log("TODO: ls", Object.keys( cloudfn.tasks.list[req.params.user] ));
+    let list = [];
+    if( cloudfn.tasks.list[req.params.user] ){
+        list = Object.keys( cloudfn.tasks.list[req.params.user]);
+    }
 
-    send_msg(res, "ls", Object.keys( cloudfn.tasks.list[req.params.user] ));
+    send_msg(res, "ls", list );
 });
 
-app.get('/u/:user/:hash', (req, res) => {
+app.get('/@/u/:user/:hash', (req, res) => {
 
     log.info({user:req.params.user, hash:req.params.hash, fields:req.fields});
     
-    console.log("current users:", users );
+    console.log("current users:", cloudfn.users.get() );
 
     // if username exists, the hash *must* match - otherwise anyone can disable an account by chaninging its email
-    if( Object.keys(users).indexOf(req.params.user) > -1 ){
-        if( verify_user(req.params.user, req.params.hash) ){
+    //if( Object.keys(cloudfn.users.get() ).indexOf(req.params.user) > -1 ){
+    if( cloudfn.users.exists(req.params.user) ){
+        if( cloudfn.users.verify(req.params.user, req.params.hash) ){
             // credentials match
             send_msg(res, 'allow');
         }else{
@@ -111,24 +85,25 @@ app.get('/u/:user/:hash', (req, res) => {
         }
     }else{
         // username does not exist, create new user
-        users[req.params.user] = {
+        cloudfn.users.set(req.params.user, {
             username : req.params.user, 
             email    : req.fields.email,
             hash     : req.params.hash,
             state    : 'enabled', //TODO: new = needs email verification | enabled = ok | disbled = cant run | recovery = awaiting password reset
             premium  : false, //TODO
             created_at: new Date().toISOString() //moment().toISOString()
-        };
-        users_save();
-        log.warn("USER_CREATE @ /u/"+ req.params.user +" @ ip:"+ ip );
+        });
+
+        
+        log.info("USER_CREATE @ /u/"+ req.params.user +" @ ip:"+ ip );
         send_msg(res, 'new');
     }
 });
 
-app.post('/rm/:user/:hash', (req, res) => {
+app.post('/@/rm/:user/:hash', (req, res) => {
     log.info({endpoint:'rm', user:req.params.user, fields:req.fields});
 
-    if( !verify_user(req.params.user, req.params.hash) ){
+    if( !cloudfn.users.verify(req.params.user, req.params.hash) ){
         return send_msg(res, 'deny');
     }
 
@@ -141,10 +116,10 @@ app.post('/rm/:user/:hash', (req, res) => {
     console.dir(cloudfn.tasks.list, {colors:true});
 });
 
-app.post('/a/:user/:hash', (req, res) => {
+app.post('/@/a/:user/:hash', (req, res) => {
     log.info({endpoint:'a', user:req.params.user, fields:req.fields, files:req.files});
     
-    if( !verify_user(req.params.user, req.params.hash) ){
+    if( !cloudfn.users.verify(req.params.user, req.params.hash) ){
         return send_msg(res, 'deny');
     }
 
@@ -155,7 +130,7 @@ app.post('/a/:user/:hash', (req, res) => {
     cloudfn.tasks.add(user, script, tmpfile, (ok) => {
         if( ok ){
 
-            add_routes(user,script);
+            add_routes(user,script, true);
 
             send_msg(res, 'SCRIPT_ADDED_SUCCESS:'+ 'https://cloudfn.stream/'+ user +'/'+ script);
         }else{
@@ -166,19 +141,14 @@ app.post('/a/:user/:hash', (req, res) => {
 
 
 // https://cloudfn.stream/logs/js/counter/346PU346PUBC45723P7WB45884548EPQ
-app.get('/log/:user/:app/:hash', (req, res) => {
-    if( !verify_user(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
+app.get('/@/log/:user/:app/:hash', (req, res) => {
+    if( !cloudfn.users.verify(req.params.user, req.params.hash) ) return send_error(res, 'VERIFICATION_ERROR');
 
     console.log("TODO: show log for", "user:", req.params.user, "app:", req.params.app);
 
     send_msg(res, "logs todo");
 });
 
-function verify_user(username, hash){
-    //console.log(username, hash, users[username].hash)
-    var usr = users[username];
-    return usr ? usr.hash === hash : false;
-}
 
 function send_error(res, msg = '', data = {}){
     log.error("@send_error "+ msg);
@@ -194,13 +164,17 @@ function send_msg(res, msg = '', data = {}){
     res.end();
 }
 
-function add_routes(user,script){
+function add_routes( user, script, showRoutes=false){
     app.get(`/${user}/${script}/*`,  cloudfn.tasks.list[user][script].fn);
     app.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
 
     app.post(`/${user}/${script}/*`, cloudfn.tasks.list[user][script].fn);
     app.post(`/${user}/${script}`,   cloudfn.tasks.list[user][script].fn);
 
+    if( showRoutes ) show_routes();
+}
+
+function show_routes(){
     app._router.stack.map( (layer) => {
         if( layer.route ){
             let m = cloudfn.utils.rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
@@ -209,8 +183,6 @@ function add_routes(user,script){
         }
     });
 }
-
-// cloudfn.tasks.load(app);
 
 // as we want to keep the lib.cloudfn.js library clean,
 // and handle alll server-specific stuff *here* (in the server file),
@@ -236,15 +208,7 @@ function load_tasks_from_file(){
     });
 
     console.dir(cloudfn.tasks.list, {colors:true});
-    /*
-    app._router.stack.map( (layer) => {
-        if( layer.route ){
-            let m = cloudfn.utils.rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
-            let p = layer.route.path;
-            console.log(m, p);
-        }
-    });
-    */
+    show_routes();
 }
 
 load_tasks_from_file();
