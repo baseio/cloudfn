@@ -1,224 +1,119 @@
 # cloudfn
 
-Short for "cloud function", cloudfn is a {yeah, this is the hard part}.
+Short for "cloud function", cloudfn is a Function-as-a-Service (FaaS) that takes the 
+infrastructure burden out of server-side code.
+
+Cloudfn is suitable for projects that needs some* server-based functionality,
+but cant afford (or bother) to setup the team, tech and infrastructure required.
+
+With cloudfn, you simply express your functionality in a javascript function,
+use the `cfn` command-line tool to upload it,
+and call the resulting URL to get/set your data.
+
+Check /examples and /test for, well, examples.
+
+## Setup
+
+Install the commandline tool with npm:
+	
+	sudo npm i -g cfn 
 
 
-Theres a few parts in play:
+Create a user account
 
-- a javasscript file exporting a function with a (context, req, res) signature
-- the context, req, res. See below.
-- a CLI to CRUD scripts to your 'account'
-- a OAuth or WebToken based authentication method
-- streaming access and error logs
+	cfn user
 
-#### Example functions
+You will be prompted for some information.
+The password you provide will *not* be stored anywhere, so remeber it.
+Read our [privacy]() and [authentication]() docs for additional details.	
 
-```javascript
 
-// minimal example
-(context, req, res, next) => res.send('ok')
-```
+## Scripting
 
-### Example use
+All cloudfn scripts adhere to this signature:
 
-1. Write the following to a file, 'counter.js'
-```javascript
-(context, req, res, next) => {
-	context.store.counter = context.store.counter +1 || 1;
-	res.json({counter});
-}
-```
-
-2. 'upload' the file to the service:
-```shell
-	$ ops counter.js
-```
-
-3. The service replies with the URL endpoint:
-```shell
-	$ adding 'counter' to https://ops.base.io/{your}/{app}/counter
-	# note: We come back to the {your} and {app} below
-```
-
-4. Call the function by GET'ing the url
-```shell
-	$ http https://ops.base.io/{you}/{app}/counter
-	HTTP/1.1 200 OK
-	Access-Control-Allow-Origin: *
-	Connection: keep-alive
-	Content-Length: 73
-	Content-Type: text/html; charset=utf-8
-	Date: Tue, 13 Sep 2016 13:07:09 GMT
-	ETag: W/"49-2EMQqjVS4vxr45E9IbZl7g"
-
-	{
-		"counter": 1
+	(api) => {
+		// your code here
 	}
-```
-Calling it again will increment the counter.
 
+or, in traditional format (you can mix and match as you want)
 
-### The `context`
-
-The context is a JS object provided to the function.  
-It is immutable, but contains a (growing) number of properties
-
-| Prop | Desc | Avail |
-| ---  | ---  | ---   |
-| store 	| a persisted JS object. Put anything in there. | 0.1.0 |
-| session | a persisted JS object, pr. session (user)   | planned |
-
-Follow the development here [LINK TO ISSUE]
-
-### The `req` and `res` and `next`
-
-The `req` is Express' `req` object.  
-The `res` is Express' `res` object.  
-The `next` is function with signature (err, result). When called, the system persists your state etc. Call it when you're done.
-
-
-### The CLI
-
-All usage of the `name` system happens through the cli.  
-Install it with npm
-```javascript
-	$ sudo npm install name-cli -g
-```
-
-When installed, the following commands
-
-```shell
-$ ops run  <scriptfile> 	# adds (or updates) a script
-$ ops del  <scriptname>  	# removes the script from the (remote) system
-$ ops lint <scriptfile> 	# checks if the scriptfile will work
-```
-
-All scripts will reside under your auth-name.
-
-### The ({your}/{app}) Auth
-
-TODO
-
-Current thinking / design goals:  
-
-Auth:  
-- no configuration (the cli should know you somehow)
-- maybe by loggin in to an OAuth provider (just once?) and store the Bearer token?
-- will need some kind of user database on the server :-( to store tokens and their repo's...
-
-App:  
-- all scripts under one 'app' should have access to the same session and store.  
-
-Loopholes / greyzone:
-- nodejs' require() actually works inside the scripts.
-- not sure if we need to lock that down somehow (require(fs), read/write anything...)
-- but its also a feature... users could require what they need... but then they need a package.json too...
-
-
-### The Access- and Error-logs
-
-Streaming Access- and Error-logs is created for all script urls,  
-and broadcasted as UDP packets. Listen to /logs/udp :
-The "base" script-url:  
-e.g. https://ops.base.io/{your}/{app}/counter  
-publishes logs on
-https://ops.base.io/{your}/{app}/counter/logs/udp  
-
-More log interfaces is planned. [LINK TO ISSUE]
-
----
-
-## Infrastructure
-
-`(WIP)`
-
-So, we need to host this somewhere.
-The usual ./up.sh or ./deploy.sh are ok...
-
-
-
-----
-
-
-## User Stories
-
-As a user, I would like to
-
-- write my code in javascript
-
-	```
-	module.exports = function (ctx, cb) { cb(null, "hello world"); }
-
-	module.exports = function (ctx, cb) {
-		let db = ctx.mongo.use(env.db);
-		let ok = db.insert({key:ctx.req.key, val:ctx.req.val, type:ctx.req.type});
-		// or with utils:
-		let ok = db.insert( ctx.utils.kvt() );
-		cb(ok.error, {records:db.count());
+	function(api){
+		// your code here
 	}
-	```
 
-- upload that code to the cloud, to create a http endpoint user/appid
+The [api]() is your connection to, and from, the world.
+A 'hello world' looks like so:
 
-	```
-	$ ops test.js
-	> https://ops.base.io/user/test
+	(api) => {
+		api.send("hello world");
+	}
 
-	```
+But, lets speak JSON instead
 
-- call my code (from other code, urls or cli)
+	(api) => {
+		api.send({ok:true, msg:"hello world"});
+	}	
 
-	```
-	$ curl -O https://ops.base.io/user/kvt-test?key=js&val={comp:base.io}&type=user
-	```
+Save that to testing/hello-world.js
 
-- access / require npm modules from my code
+To run this code locally, do
 
-As a engineer, I would like my users code to
-
-- run in sandbox
-- stream logs user/appid/logs
-
-	```
-	$ httail https://ops.base.io/user/kvt-test/logs
-	```
+	cfn test testing/hello-world.js
 
 
-----------
+## Upload
 
-context.redis.set, context.redis.get
-context.redis.publish, context.redis.subscribe
+To upload the script to your cloudfn account, do
 
-are all prefixed with `appname`, so
+	cfn add testing/hello-world.js
 
-context.redis.set("key", "value") becomes context.redis.set("appname-key", value),
-and
-context.redis.get("key", "value") becomes context.redis.get("appname-key", value)
+The server will reply with the URL to your script, sth like this:
 
+	https://cloudfn.stream/<username>/hello-world
 
------------
-
-each appname has one postgres db available through context.postgres, where any number of tables can be added and used.
+Try opening that in a browser.
 
 
+## Call from CLI
+
+All scripts are available at simple HTTP Urls.
+To 'call' them, just load the URL. 
+(Issue a GET request that is)
+
+The cloundfn tool contains a simple utility you can use: 
+
+	cfn call <username>/hello-world
+
+and your favorite http tool, or library will work too:
+
+	curl https://cloudfn.stream/<username>/hello-world
+	http https://cloudfn.stream/<username>/hello-world
 
 
-/// some test
-
-Args
-
-URLs
-cfn call http://localhost:3033/js/counter/a/b/c
-
-URL Query Parameters:
-cfn call http://localhost:3033/js/counter?a=1
-cfn call http://localhost:3033/js/counter?c=2\&d=3
-
-FORM
-httpie wont play :|
+## Call from jQuery
 
 
+## Call from vanilla Javascript
 
-Using CLI:
+	<script src="https://cloudfn.stream/<username>/hello-world?format=jsonp">
+		console.log(jsonp);
+	</script>
 
-cfn callp http://localhost:3033/js/counter/x/y/z?m=n
+
+## Access control
+
+Note that all scripts, by default, are openly available to 'call' for anyone.
+To limit that, cloudfn supports two access control strategies:
+[Token]() and [Origin]()
+
+
+## Next
+
+- Readup on the api-object
+- Check examples
+- Check blogposts
+
+## Premium features
+
+- TBA (FS, Websockets, PubSub, Gun) 

@@ -14,7 +14,7 @@ var pack        = require('./package.json');
 cloudfn.api.init();
 cloudfn.users.load();
 
-cloudfn.api.test();
+//cloudfn.api.test();
 
 //return;
 
@@ -165,13 +165,30 @@ function send_msg(res, msg = '', data = {}){
 }
 
 function add_routes( user, script, showRoutes=false){
-    app.get(`/${user}/${script}/*`,  cloudfn.tasks.list[user][script].fn);
-    app.get(`/${user}/${script}`,    cloudfn.tasks.list[user][script].fn);
 
-    app.post(`/${user}/${script}/*`, cloudfn.tasks.list[user][script].fn);
-    app.post(`/${user}/${script}`,   cloudfn.tasks.list[user][script].fn);
+    let url1 = `/${user}/${script}/*`;
+    let url2 = `/${user}/${script}`;
 
+    /// Make sure the route is not defined already
+    /// (Can happen if a user re-uploads a script)
+    let add = true;
+    app._router.stack.map( (layer) => {
+        if( layer.route ){
+            let test = layer.route.path;
+            if( test === url1 || test === url2 ) add = false;
+        }
+    });
+
+    if( add ){
+        app.get(url1, cloudfn.tasks.list[user][script].fn);
+        app.get(url2, cloudfn.tasks.list[user][script].fn);
+
+        app.post(url1, cloudfn.tasks.list[user][script].fn);
+        app.post(url2, cloudfn.tasks.list[user][script].fn);
+    }
     if( showRoutes ) show_routes();
+
+    if( !add ) console.log("add_routes: Route exists", url1);
 }
 
 function show_routes(){

@@ -18,7 +18,7 @@
         "email": "js@base.io",
         "hash": "7f456aa2be4a630ff7d5ce17cd5d3dd2f83775d8362f0f04117f33954cebb4e0",
         "state": "enabled",
-        "premium": false,
+        "premium": true,
         "created_at": "2016-11-29T08:42:51.454Z"
     }
 }

@@ -36,7 +36,7 @@ describe('lib.cloundfn.js Library', () => {
 	});
 
 	describe('Example scripts', () => {
-
+	
 		/// Echo
 		describe('Echo', () => {
 			
@@ -120,9 +120,52 @@ describe('lib.cloundfn.js Library', () => {
 			});
 
 		});
-
+	
 		/// Premium
 		describe('FS (Premium)', () => {
+			var plugs = cloudfn.api.plugins;
+
+			it('POST /examples/fs should return: "{ok:true, msg:WRITE_FILE_SUCCESS}"', (done) => {
+				chai.request(remote)
+					.post('/examples/fs')
+					.field('file', 'data.json')
+					.field('data', JSON.stringify({a:2}))
+					.end((err,res) => {
+						//console.log(res.body);
+						res.should.have.status(200);
+						res.body.should.be.a('object');
+						res.body.should.have.property('ok').eql(true);
+						res.body.should.have.property('msg').eql('WRITE_FILE_SUCCESS');
+						done();
+					});
+			});
+			
+			it('GET /examples/fs?file=data.json should return: "{ok:true, msg:{a:2}}"', (done) => {
+				chai.request(remote)
+					.get('/examples/fs?file=data.json')
+					.end((err,res) => {
+						//console.log(res.body);
+						res.should.have.status(200);
+						res.body.should.be.a('object');
+						res.body.should.have.property('ok').eql(true);
+						res.body.should.have.property('msg').eql({a:2});
+						done();
+					});
+			});
+
+			it('GET /examples/fs should return: "{ok:true, msg:[data.json]}"', (done) => {
+				chai.request(remote)
+					.get('/examples/fs')
+					.end((err,res) => {
+						//console.log(res.body);
+						res.should.have.status(200);
+						res.body.should.be.a('object');
+						res.body.should.have.property('ok').eql(true);
+						res.body.should.have.property('msg').eql(['data.json']);
+						done();
+					});
+			});
+
 		});
 
 		describe('Webhook (Premium)', () => {
