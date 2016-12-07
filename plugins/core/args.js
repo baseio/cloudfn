@@ -60,6 +60,10 @@ module.exports = function(req){
 	//console.dir( req.fields, {colors:true} );
 	args.fields = req.fields || {};
 
+	console.log("@core.body req.body:");
+	console.dir( req.body, {colors:true} );
+	args.body = req.body || {};
+
 	//console.log("@core.args req.files:");
 	//console.dir( req.files, {colors:true} );
 	args.files = req.files || {};
