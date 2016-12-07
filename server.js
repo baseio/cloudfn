@@ -2,7 +2,7 @@ var express     = require('express');
 var chalk       = require('chalk');
 var glob        = require('glob');
 var fs          = require('fs');
-var cors        = require('cors');
+//var cors        = require('cors');
 var moment      = require('moment');
 var bodyParser  = require('body-parser');
 var formidable  = require('express-formidable');
@@ -29,10 +29,28 @@ var log = pino({
 let tasks       = {};
 let port        = process.env.port || 3033;
 let app         = express();
+
+//app.options('*', cors()); // include before other routes
+
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+      res.sendStatus(200);
+    }
+    else {
+      next();
+    }
+};
+app.use(allowCrossDomain);
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
-app.use(cors());
+//app.use(cors());
 app.use(formidable());
 app.disable('x-powered-by');
 
@@ -40,7 +58,6 @@ app.disable('x-powered-by');
 /// todo
 /// - logging (via pub-sub > file >> websocket)
 /// - add good things to context (via plugins?)
-
 
 app.listen(port, () => {
     console.log( chalk.yellow('Listining on port '), port);
@@ -51,6 +68,8 @@ app.get('/version', (req, res) => {
     res.send( pack.name +", v."+ pack.version );
     res.end();
 });
+
+
 
 /// List the users' scripts
 app.get('/@/ls/:user/:hash', (req, res) => {
@@ -69,17 +88,17 @@ app.get('/@/u/:user/:hash', (req, res) => {
 
     log.info({user:req.params.user, hash:req.params.hash, fields:req.fields});
     
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
     console.log("current users:", cloudfn.users.get() );
 
     // if username exists, the hash *must* match - otherwise anyone can disable an account by chaninging its email
-    //if( Object.keys(cloudfn.users.get() ).indexOf(req.params.user) > -1 ){
     if( cloudfn.users.exists(req.params.user) ){
         if( cloudfn.users.verify(req.params.user, req.params.hash) ){
             // credentials match
             send_msg(res, 'allow');
         }else{
             // credentials does not match
-            var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
             log.warn("USER_VERIFICATION_ERROR @ /u/"+ req.params.user +" @ ip:"+ ip );
             send_msg(res, 'deny');
         }
@@ -91,10 +110,9 @@ app.get('/@/u/:user/:hash', (req, res) => {
             hash     : req.params.hash,
             state    : 'enabled', //TODO: new = needs email verification | enabled = ok | disbled = cant run | recovery = awaiting password reset
             premium  : false, //TODO
-            created_at: new Date().toISOString() //moment().toISOString()
+            created_at: new Date().toISOString()
         });
 
-        
         log.info("USER_CREATE @ /u/"+ req.params.user +" @ ip:"+ ip );
         send_msg(res, 'new');
     }
@@ -150,6 +168,8 @@ app.get('/@/log/:user/:app/:hash', (req, res) => {
 });
 
 
+
+
 function send_error(res, msg = '', data = {}){
     log.error("@send_error "+ msg);
     res.status(500);
@@ -185,6 +205,9 @@ function add_routes( user, script, showRoutes=false){
 
         app.post(url1, cloudfn.tasks.list[user][script].fn);
         app.post(url2, cloudfn.tasks.list[user][script].fn);
+
+        app.put(url1, cloudfn.tasks.list[user][script].fn);
+        app.put(url2, cloudfn.tasks.list[user][script].fn);
     }
     if( showRoutes ) show_routes();
 

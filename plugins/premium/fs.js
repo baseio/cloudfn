@@ -13,7 +13,8 @@ const FSModule = {
 	},
 
 	read: function(file, cb){
-		let safeFile = this.safePath(file);
+		console.log("@prem.fs read:", file);
+		let safeFile = this.getSafePath(file);
 
 		console.log("@prem.fs read:", file, ' > ', safeFile );
 
@@ -34,7 +35,9 @@ const FSModule = {
 	},
 
 	write: function(file, data, cb){
-		let safeFile = this.safePath(file);
+		console.log("@prem.fs write:", file, data);
+		console.log("@prem.fs write:", this);
+		let safeFile = this.getSafePath(file);
 		let err = false;
 		console.log("@prem.fs write:", file, ' > ', safeFile, data );
 
@@ -53,12 +56,15 @@ const FSModule = {
 	},
 
 	list: function(dir, cb){
-		console.log("@prem.fs list:", this.userpath);
+		console.log("@prem.fs list:", dir);
+		let safeFile = this.getSafePath(dir);
+		console.log("@prem.fs list:", safeFile);
+
+
 		let ignore = ['index.js', 'store.json'];
-		var list = fs.readdirSync(this.userpath).filter( val => ignore.indexOf(val) < 0 );
-		//console.log(list);
+		var list = fs.readdirSync(safeFile).filter( val => ignore.indexOf(val) < 0 );
+		console.log(list);
 		/// ignore the system files: index.js and store.json
-		//console.log(list);
 		cb(true, list);
 	}
 }

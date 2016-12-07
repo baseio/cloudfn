@@ -48,7 +48,7 @@ module.exports = function(req){
 		args.params = keyvalue;
 	}
 
-	//console.log("@harvest req.query:");
+	//console.log("@core.args req.query:");
 	//console.dir( req.query, {colors:true} );
 	args.query = ( req.query )
 		? req.query // split into key->value?
@@ -56,23 +56,23 @@ module.exports = function(req){
 	args.query = preferNumberInObject(args.query);
 
 
-	//console.log("@harvest req.fields:");
+	//console.log("@core.args req.fields:");
 	//console.dir( req.fields, {colors:true} );
 	args.fields = req.fields || {};
 
-	//console.log("@harvest req.files:");
+	//console.log("@core.args req.files:");
 	//console.dir( req.files, {colors:true} );
 	args.files = req.files || {};
 
-	//console.log("@harvest req.headers:");
-	//console.dir( req.headers, {colors:true} );
+	console.log("@core.args req.headers:");
+	console.dir( req.headers, {colors:true} );
 	args.headers = req.headers || {};
 
 	//args.headers = req.headers || {};
 	//args.origin = req.headers.referer || '';
 	//args.origin = 'https://cloudfn.github.io/website/'; // test
 	args.origin = (args.headers.referer)
-		? arg.headers.referer
+		? args.headers.referer
 		: '';
 
 

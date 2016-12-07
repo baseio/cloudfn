@@ -11,6 +11,10 @@ const cloudfn = require('../lib.cloudfn.js');
 var remote  	= 'http://localhost:3033';
 //var remote  	= 'https://cloudfn.stream';
 
+
+var random_number = parseInt( Math.random() * 1000);
+
+
 describe('lib.cloundfn.js Library', () => {
 
 	cloudfn.api.init();
@@ -35,149 +39,188 @@ describe('lib.cloundfn.js Library', () => {
 		});
 	});
 
-	describe('Example scripts', () => {
+});
+
+describe('Example scripts', () => {
+
 	
-		/// Echo
-		describe('Echo', () => {
-			
-			it('GET /examples/echo/msg/123 should return: "{ok:true, msg:123}"', (done) => {
-				chai.request(remote).get('/examples/echo/msg/123').end((err,res) => {
-					//console.log(res.body);
-					res.should.have.status(200);
-					res.body.should.be.a('object');
-					res.body.should.have.property('ok').eql(true);
-					res.body.should.have.property('msg').eql(123);
-					done();
-				});
-			});
-
-			it('GET /examples/echo?msg=456 should return: "{ok:true, msg:456}"', (done) => {
-				chai.request(remote).get('/examples/echo?msg=456').end((err,res) => {
-					//console.log(res.body);
-					res.should.have.status(200);
-					res.body.should.be.a('object');
-					res.body.should.have.property('ok').eql(true);
-					res.body.should.have.property('msg').eql(456);
-					done();
-				});
-			});
+	/// Echo
+	describe('Echo', () => {
 		
-		});
-		
-
-		/// Auth
-		describe('Auth (keys)', () => {
-		
-			it('GET /examples/auth-token?token=AABBCC should return: "{ok:true, msg:...}"', (done) => {
-				chai.request(remote).get('/examples/auth-token?token=AABBCC').end((err,res) => {
-					//console.log(res.body);
-					res.should.have.status(200);
-					res.body.should.be.a('object');
-					res.body.should.have.property('ok').eql(true);
-					done();
-				});
+		it('GET /examples/echo/msg/123 should return: "{ok:true, msg:123}"', (done) => {
+			chai.request(remote).get('/examples/echo/msg/123').end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				res.body.should.have.property('msg').eql(123);
+				done();
 			});
-
-			it('GET /examples/auth-token?token=CCEEFF should return: "{ok:false, msg:...}"', (done) => {
-				chai.request(remote).get('/examples/auth-token?token=CCEEFF').end((err,res) => {
-					//console.log(res.body);
-					res.should.have.status(200);
-					res.body.should.be.a('object');
-					res.body.should.have.property('ok').eql(false);
-					done();
-				});
-			});
-		
 		});
 
-		/// Store
-		describe('Store', () => {
-	
-			it('POST /examples/store?user=test&score=123 should return: "{ok:true, msg:SET_RECORD, record:{test:123}}"', (done) => {
-				chai.request(remote).post('/examples/store?user=test&score=123').end((err,res) => {
-					//console.log(res.body);
-					res.should.have.status(200);
-					res.body.should.be.a('object');
-					res.body.should.have.property('ok').eql(true);
-					res.body.should.have.property('msg').eql('SET_RECORD');
-					res.body.should.have.property('record');
-					res.body.record.should.have.property('test').eql(123);
-					done();
-				});
+		it('GET /examples/echo?msg=456 should return: "{ok:true, msg:456}"', (done) => {
+			chai.request(remote).get('/examples/echo?msg=456').end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				res.body.should.have.property('msg').eql(456);
+				done();
 			});
-
-			it('GET /examples/store?user=test should return: "{ok:true, msg:GET_RECORD, record:{test:123}}"', (done) => {
-				chai.request(remote).get('/examples/store?user=test').end((err,res) => {
-					//console.log(res.body);
-					res.should.have.status(200);
-					res.body.should.be.a('object');
-					res.body.should.have.property('ok').eql(true);
-					res.body.should.have.property('msg').eql('GET_RECORD');
-					res.body.should.have.property('record');
-					res.body.record.should.have.property('test').eql(123);
-					done();
-				});
-			});
-
 		});
 	
-		/// Premium
-		describe('FS (Premium)', () => {
-			var plugs = cloudfn.api.plugins;
+	});
+	
 
-			it('POST /examples/fs should return: "{ok:true, msg:WRITE_FILE_SUCCESS}"', (done) => {
-				chai.request(remote)
-					.post('/examples/fs')
-					.field('file', 'data.json')
-					.field('data', JSON.stringify({a:2}))
-					.end((err,res) => {
-						//console.log(res.body);
-						res.should.have.status(200);
-						res.body.should.be.a('object');
-						res.body.should.have.property('ok').eql(true);
-						res.body.should.have.property('msg').eql('WRITE_FILE_SUCCESS');
-						done();
-					});
+	/// Auth
+	describe('Auth (keys)', () => {
+	
+		it('GET /examples/auth-keys?key=AABBCC should return: "{ok:true, msg:...}"', (done) => {
+			chai.request(remote).get('/examples/auth-keys?key=AABBCC').end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				done();
 			});
-			
-			it('GET /examples/fs?file=data.json should return: "{ok:true, msg:{a:2}}"', (done) => {
-				chai.request(remote)
-					.get('/examples/fs?file=data.json')
-					.end((err,res) => {
-						//console.log(res.body);
-						res.should.have.status(200);
-						res.body.should.be.a('object');
-						res.body.should.have.property('ok').eql(true);
-						res.body.should.have.property('msg').eql({a:2});
-						done();
-					});
-			});
-
-			it('GET /examples/fs should return: "{ok:true, msg:[data.json]}"', (done) => {
-				chai.request(remote)
-					.get('/examples/fs')
-					.end((err,res) => {
-						//console.log(res.body);
-						res.should.have.status(200);
-						res.body.should.be.a('object');
-						res.body.should.have.property('ok').eql(true);
-						res.body.should.have.property('msg').eql(['data.json']);
-						done();
-					});
-			});
-
 		});
 
-		describe('Webhook (Premium)', () => {
+		it('GET /examples/auth-keys?key=CCEEFF should return: "{ok:false, msg:...}"', (done) => {
+			chai.request(remote).get('/examples/auth-keys?key=CCEEFF').end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(false);
+				done();
+			});
 		});
 	
-		describe('Websocket (Premium)', () => {
-		});
+	});
+	
 
-		describe('PubSub (Premium)', () => {
+	/// Auth
+	describe('Auth (origins)', () => {
+	
+		it('GET /examples/auth-origin (from localhost) should return: "{ok:true, ...}"', (done) => {
+			chai.request(remote)
+				.get('/examples/auth-origin')
+				.set('referer', 'localhost')
+				.end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				done();
+			});
 		});
+		
+		it('GET /examples/auth-origin (from **fake** github.com) should return: "{ok:false, ...}"', (done) => {
+			chai.request(remote)
+				.get('/examples/auth-origin')
+				.set('referer', 'github.com')
+				.end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(false);
+				done();
+			});
+		});
+		
+	
 	});
 
+	
 
+	/// Store
+	describe('Store', () => {
 
+		it('POST /examples/store?user=test&score='+ random_number +' should return: "{ok:true, msg:SET_RECORD, record:{test:'+ random_number +'}}"', (done) => {
+			chai.request(remote).post('/examples/store?user=test&score='+ random_number).end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				res.body.should.have.property('msg').eql('SET_RECORD');
+				res.body.should.have.property('record');
+				res.body.record.should.have.property('test').eql(random_number);
+				done();
+			});
+		});
+
+		it('GET /examples/store?user=test should return: "{ok:true, msg:GET_RECORD, record:{test:'+ random_number +'}}"', (done) => {
+			chai.request(remote).get('/examples/store?user=test').end((err,res) => {
+				//console.log(res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				res.body.should.have.property('msg').eql('GET_RECORD');
+				res.body.should.have.property('record');
+				res.body.record.should.have.property('test').eql(random_number);
+				done();
+			});
+		});
+
+	});
+});
+
+describe('Premium scripts', () => {
+	
+	describe('FS', () => {
+		var plugs = cloudfn.api.plugins;
+
+		it('POST /examples/fs should return: "{ok:true, msg:WRITE_FILE_SUCCESS}"', (done) => {
+			chai.request(remote)
+				.post('/examples/fs')
+				.field('file', 'data.json')
+				.field('data', JSON.stringify({'random_number':random_number}))
+				.end((err,res) => {
+					//console.log(res.body);
+					res.should.have.status(200);
+					res.body.should.be.a('object');
+					res.body.should.have.property('ok').eql(true);
+					res.body.should.have.property('msg').eql('WRITE_FILE_SUCCESS');
+					done();
+				});
+		});
+		it('GET /examples/fs?file=data.json should return: "{ok:true, msg:{random_number:'+ random_number +'}}"', (done) => {
+			chai.request(remote)
+				.get('/examples/fs?file=data.json')
+				.end((err,res) => {
+					//console.log(res.body);
+					res.should.have.status(200);
+					res.body.should.be.a('object');
+					res.body.should.have.property('ok').eql(true);
+					res.body.should.have.property('msg').eql({"random_number":random_number});
+					done();
+				});
+		});
+
+		
+		it('GET /examples/fs should return: "{ok:true, msg:[data.json]}"', (done) => {
+			chai.request(remote)
+				.get('/examples/fs')
+				.end((err,res) => {
+					//console.log(res.body);
+					res.should.have.status(200);
+					res.body.should.be.a('object');
+					res.body.should.have.property('ok').eql(true);
+					res.body.should.have.property('msg').eql(['data.json']);
+					done();
+				});
+		});
+		
+	});
+
+	/*
+	describe('Webhook (Premium)', () => {
+	});
+
+	describe('Websocket (Premium)', () => {
+	});
+
+	describe('PubSub (Premium)', () => {
+	});
+
+	*/	
 });

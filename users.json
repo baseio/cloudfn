@@ -20,5 +20,21 @@
         "state": "enabled",
         "premium": true,
         "created_at": "2016-11-29T08:42:51.454Z"
+    },
+    "cfn": {
+        "username": "cfn",
+        "email": "cfn@base.io",
+        "hash": "d5382067ce14df2406324261a355bb2be0e3369a1061e4d535426b4033f26f31",
+        "state": "enabled",
+        "premium": false,
+        "created_at": "2016-12-06T12:08:24.948Z"
+    },
+    "cfna": {
+        "username": "cfna",
+        "email": "cfn@base.io",
+        "hash": "7731abe8f809afea44accea28a04cdc5495b2ef07bbce5daf54e7b093b83d4f2",
+        "state": "enabled",
+        "premium": false,
+        "created_at": "2016-12-06T12:15:59.446Z"
     }
 }

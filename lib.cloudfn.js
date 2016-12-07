@@ -155,6 +155,8 @@ const Utils = {
 
 	getSafePath: function(filepath){
 		// Note: bound to {userpath} from API.harvest
+		console.log("@Utils.getSafePath", this);
+
 		let parts = path.parse(filepath);
 		let dir   = parts.dir.replace(/\./g, '');
 		return path.join(this.userpath, dir, parts.base);
@@ -202,19 +204,19 @@ module.exports.verify = Verify;
 
 const Store = {
 	init: (filepath) => {
-		var filename = path.join( TASKDIRECTORY, filepath, 'store.json');
+		var filename = path.join(filepath, 'store.json');
 		if( !Utils.is_readable(filename, true) ){
 			fs.writeFileSync( filename, '{}' );
 		}
 	},
 
 	save: (filepath, data) => {
-		var filename = path.join( TASKDIRECTORY, filepath, 'store.json');
+		var filename = path.join(filepath, 'store.json');
 		fs.writeFileSync( filename, JSON.stringify(data, null, '  ') );
 	},
 
 	read: (filepath) => {
-		var filename = path.join( TASKDIRECTORY, filepath, 'store.json');
+		var filename = path.join(filepath, 'store.json');
 		return JSON.parse( fs.readFileSync(filename).toString() ) || {};
 	}
 }
@@ -250,7 +252,8 @@ var Tasks = {
 
 	mount: (user, script, jscode) => {
 
-		Store.init( user+'/'+script );
+		var filepath  = path.join(TASKDIRECTORY, user, script);
+		Store.init( filepath );//user+'/'+script );
 
 
 		Tasks.list[user] = Tasks.list[user] || {};
@@ -318,11 +321,12 @@ const Runner = {
         console.log("@task ip:"+ ip );
 
 		var hrstart = process.hrtime();
-		var context = API.harvest(req, res, user, script);
+		//var context = API.harvest(req, res, user, script);
+		var context = new Context(req, res, user, script);
 
 		try {
 			
-			task.logstream = fs.createWriteStream( task.logfile, {flags: 'a'} );
+			//task.logstream = fs.createWriteStream( task.logfile, {flags: 'a'} );
 			task.code( context );
 
 		}catch(e){
@@ -335,7 +339,8 @@ const Runner = {
 		Sandbox.restore(msg);
 
 		process.nextTick(function() {
-	   		task.logstream.end( '@'+ msg +'\n' );
+	   		//task.logstream.end( '@'+ msg +'\n' );
+	   		res.end();
 	    });
 
 		console.log( msg );
@@ -346,6 +351,53 @@ module.exports.run = Runner;
 
 /// API
 
+
+var Context = function(req, res, user, script){
+
+	var _res = res;
+	var _userpath = path.join(TASKDIRECTORY, user, script);
+	var _premium  = Users.is_premium(user);
+
+	this.user  	= user;
+	this.script = script;
+	this.method = req.method;
+
+	this.clean 	= Sandbox.clean;
+	
+	this.args 	= API.plugins.core.args(req);
+
+	this.send 	= API.plugins.core.send.bind({args:this.args,res:res});
+
+	this.auth 	= API.plugins.core.auth;//.bind(this);
+
+	this.store = {
+		data: Store.read(_userpath), // the store.json file 
+		save: function (data) {
+			console.log("@api.store.save() _userpath:", _userpath, "this.data:", this.data);//dataroot, base.store.data);
+			Store.save(_userpath, this.data);
+		},
+	}
+
+	// Load or Mock Premium features
+
+	this.fs = {};
+	Object.keys(API.plugins.premium.fs).map( (key) => {
+		if( _premium ){
+			this.fs[key] = API.plugins.premium.fs[key].bind(this);
+		}else{
+			this.fs[key] = function(){
+				var _key = key;
+				console.log("Access to Premium API call denied ("+ _key +")" );
+			}
+		}
+	});
+	if( _premium ){
+		this.getSafePath = Utils.getSafePath.bind({userpath:_userpath});
+	}
+
+	return this;
+}
+
 const API = {
 	
 	plugins : {
@@ -355,15 +407,13 @@ const API = {
 	},
 
 	init: () => {
-		//API.plugins.core.args 		= require('./plugins/core/args');
+		//TODO: Add loader, and use a mocking lib to prevent 'cannot read property fs on undefined' errors
+		
+		API.plugins.core.args 		= require('./plugins/core/args.js');
 		API.plugins.core.auth 		= require('./plugins/core/auth.js');
 		API.plugins.core.send 		= require('./plugins/core/send.js');
 		
-		API.plugins.default.hello 	= require('./plugins/hello.js');
-
 		API.plugins.premium.fs 		= require('./plugins/premium/fs.js');
-
-		//TODO: Add loader, and use a mocking lib to prevent 'cannot read property fs on undefined' errors
 
 		console.log("enabled plugins:");
 		console.dir( API.plugins, {colors:true} );
@@ -474,8 +524,11 @@ const API = {
 		}
 		*/
 
-		var logstream = fs.createWriteStream( Tasks.list[user][script].logfile, { flags: 'a' });
-		logstream.write('\n');
+		var logstream = null;
+		if( Sandbox.use_console_trap ){
+			logstream = fs.createWriteStream( Tasks.list[user][script].logfile, { flags: 'a' });
+			logstream.write('\n');
+		}
 
 		var args = require('./plugins/core/args')(req);
 		var base = Object.assign(
@@ -556,7 +609,8 @@ var Module = require("module");
 const Sandbox = {
 	module_original_loadFn: Module._load,
 
-	console: console,
+	//console: console,
+	use_console_trap: false,
 	console_trap: false,
 
 	clean: function(apiref){
@@ -585,28 +639,29 @@ const Sandbox = {
 	    // Disable require()
 	    Module._load = Sandbox.load_disabled;
 
-
-	    // replace process.console with logger, so that the user can 
-	    // write console.log(a,b,c) and have that logged to a file
-	    // in the current script directory
-	    // TODO: provide a method to view / tail them
-		['log', 'info', 'warn', 'error', 'dir'].map( (key) => {
-			console[key] = function(){
-				let log = apiref.logstream;
-				let fnkey = key;
-				if( Sandbox.console_trap ){
-					log.write( "type:"+ fnkey +"\t"+ util.format.apply(null, arguments) + '\n');
-	  				process.stdout.write("type:"+ fnkey +"\t"+ util.format.apply(null, arguments) + '\n');
-				}else{
-					//Sandbox.console.warn.apply(null, arguments);
-					process.stdout.write( util.format.apply(null, arguments) + '\n');
+		if( Sandbox.use_console_trap ){
+		    // replace process.console with logger, so that the user can 
+		    // write console.log(a,b,c) and have that logged to a file
+		    // in the current script directory
+		    // TODO: provide a method to view / tail them
+			['log', 'info', 'warn', 'error', 'dir'].map( (key) => {
+				console[key] = function(){
+					let log = apiref.logstream;
+					let fnkey = key;
+					if( Sandbox.console_trap ){
+						log.write( "type:"+ fnkey +"\t"+ util.format.apply(null, arguments) + '\n');
+		  				process.stdout.write("type:"+ fnkey +"\t"+ util.format.apply(null, arguments) + '\n');
+					}else{
+						//Sandbox.console.warn.apply(null, arguments);
+						process.stdout.write( util.format.apply(null, arguments) + '\n');
+					}
 				}
-			}
-		});
+			});
 
-		console.log("== usr begin", apiref.method, apiref.dataroot);
-		
-		Sandbox.console_trap = true;
+			console.log("== usr begin", apiref.method, apiref.dataroot);
+			
+			Sandbox.console_trap = true;
+		}
 	   
 	    return [];
 	},
