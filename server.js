@@ -32,26 +32,11 @@ let app         = express();
 
 app.options('*', cors()); // include before other routes
 
-var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
-
-    // intercept OPTIONS method
-    if ('OPTIONS' == req.method) {
-      res.sendStatus(200);
-    }
-    else {
-      next();
-    }
-};
-//app.use(allowCrossDomain);
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(cors());
-app.use(formidable());
+//app.use(formidable());
 app.disable('x-powered-by');
 
 
@@ -84,7 +69,7 @@ app.get('/@/ls/:user/:hash', (req, res) => {
     send_msg(res, "ls", list );
 });
 
-app.get('/@/u/:user/:hash', (req, res) => {
+app.get('/@/u/:user/:hash', formidable(), (req, res) => {
 
     log.info({user:req.params.user, hash:req.params.hash, fields:req.fields});
     
@@ -118,7 +103,7 @@ app.get('/@/u/:user/:hash', (req, res) => {
     }
 });
 
-app.post('/@/rm/:user/:hash', (req, res) => {
+app.post('/@/rm/:user/:hash', formidable(), (req, res) => {
     log.info({endpoint:'rm', user:req.params.user, fields:req.fields});
 
     if( !cloudfn.users.verify(req.params.user, req.params.hash) ){
@@ -134,7 +119,7 @@ app.post('/@/rm/:user/:hash', (req, res) => {
     console.dir(cloudfn.tasks.list, {colors:true});
 });
 
-app.post('/@/a/:user/:hash', (req, res) => {
+app.post('/@/a/:user/:hash', formidable(), (req, res) => {
     log.info({endpoint:'a', user:req.params.user, fields:req.fields, files:req.files});
     
     if( !cloudfn.users.verify(req.params.user, req.params.hash) ){
@@ -205,9 +190,6 @@ function add_routes( user, script, showRoutes=false){
 
         app.post(url1, cloudfn.tasks.list[user][script].fn);
         app.post(url2, cloudfn.tasks.list[user][script].fn);
-
-        app.put(url1, cloudfn.tasks.list[user][script].fn);
-        app.put(url2, cloudfn.tasks.list[user][script].fn);
     }
     if( showRoutes ) show_routes();
 
