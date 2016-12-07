@@ -53,12 +53,12 @@ server {
 
     	deny 66.249.69.126; # also added to IP tables.
 
-    }
+    #}
 
 	#
 	# Wide-open CORS config for nginx
 	#
-	location * {
+	#location * {
 
 		#add_header 'Access-Control-Allow-Origin' *;
 
