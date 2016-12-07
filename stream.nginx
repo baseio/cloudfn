@@ -58,7 +58,7 @@ server {
 	#
 	# Wide-open CORS config for nginx
 	#
-	location / {
+	location * {
 
 		#add_header 'Access-Control-Allow-Origin' *;
 
