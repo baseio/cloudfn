@@ -30,7 +30,7 @@ let tasks       = {};
 let port        = process.env.port || 3033;
 let app         = express();
 
-//app.options('*', cors()); // include before other routes
+app.options('*', cors()); // include before other routes
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
