@@ -2,7 +2,7 @@ var express     = require('express');
 var chalk       = require('chalk');
 var glob        = require('glob');
 var fs          = require('fs');
-//var cors        = require('cors');
+var cors        = require('cors');
 var moment      = require('moment');
 var bodyParser  = require('body-parser');
 var formidable  = require('express-formidable');
@@ -45,12 +45,12 @@ var allowCrossDomain = function(req, res, next) {
       next();
     }
 };
-app.use(allowCrossDomain);
+//app.use(allowCrossDomain);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
-//app.use(cors());
+app.use(cors());
 app.use(formidable());
 app.disable('x-powered-by');
 
