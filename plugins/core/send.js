@@ -5,7 +5,7 @@ module.exports = function(data){
 	//console.log("@send() ", this.args);
 
 	// obey return format from url-query
-	//console.log("@core.send format?", this.args.query);
+	console.log("@core.send use provided format?", this.args);
 	if( this.args.query.format ){
 		switch (this.args.query.format) {
 			case 'jsonp' : 
