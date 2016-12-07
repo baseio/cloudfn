@@ -1,6 +1,6 @@
 {
   "name": "cloudfn-system",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "FaaS : Functions as a Service",
   "repository": "https://github.com/cloudfn/system",
   "main": "server.js",
