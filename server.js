@@ -36,7 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(cors());
-//app.use(formidable());
+//app.use(formidable()); // enable pr route instead - aim to remove
 app.disable('x-powered-by');
 
 
