@@ -53,9 +53,9 @@ server {
 
     	deny 66.249.69.126; # also added to IP tables.
 
-    #}
+    }
 
-	#location * {
+	location / {
 
 		if ($request_method = 'OPTIONS') {
 			add_header 'Access-Control-Allow-Origin' '*';
