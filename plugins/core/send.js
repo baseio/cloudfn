@@ -9,8 +9,17 @@ module.exports = function(data){
 	if( this.args.query.format ){
 		switch (this.args.query.format) {
 			case 'jsonp' : 
+				console.log("@core.send", "sending jsonp");
 				this.res.set('Content-Type', 'text/javascript');
 				this.res.send( 'var jsonp='+ JSON.stringify(data, null, '  ') );
+				break;
+		}
+	}else if( this.args.query.callback ){
+		switch (this.args.query.callback) {
+			case 'jsonp' : 
+				console.log("@core.send", "sending callback");
+				this.res.set('Content-Type', 'text/javascript');
+				this.res.send( this.args.query.callback +'('+ JSON.stringify(data, null, '  ') +');');
 				break;
 		}
 	}else{
