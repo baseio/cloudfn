@@ -11,7 +11,7 @@ module.exports = function(data){
 			case 'jsonp' : 
 				console.log("@core.send", "sending jsonp");
 				this.res.set('Content-Type', 'text/javascript');
-				this.res.send( 'var jsonp='+ JSON.stringify(data, null, '  ') );
+				this.res.send( 'var jsonp='+ JSON.stringify(data) );
 				break;
 		}
 	}else if( this.args.query.callback ){
