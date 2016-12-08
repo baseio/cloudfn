@@ -15,13 +15,11 @@ module.exports = function(data){
 				break;
 		}
 	}else if( this.args.query.callback ){
-		switch (this.args.query.callback) {
-			case 'jsonp' : 
-				console.log("@core.send", "sending callback");
-				this.res.set('Content-Type', 'text/javascript');
-				this.res.send( this.args.query.callback +'('+ JSON.stringify(data, null, '  ') +');');
-				break;
-		}
+
+		console.log("@core.send", "sending callback");
+		this.res.set('Content-Type', 'text/javascript');
+		this.res.send( this.args.query.callback +'('+ JSON.stringify(data) +');');
+
 	}else{
 
 		if( typeof data === 'string' ){
