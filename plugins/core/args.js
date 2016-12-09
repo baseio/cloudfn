@@ -19,7 +19,8 @@ function preferNumberInObject( obj ){
 }
 
 module.exports = function(req){	
-	console.log("@core.args req.params:", req.params);
+	//console.log("@core.args req.params:", req.params);
+	//console.log("@core.args req.query:", req.query);
 	
 	var args = {}; // get from req, router, forms etc.
 	

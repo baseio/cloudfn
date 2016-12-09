@@ -11,12 +11,10 @@ var path        = require('path');
 var cloudfn     = require('./lib.cloudfn.js');
 var pack        = require('./package.json');
 
-cloudfn.api.init();
+cloudfn.plugins.load();
+cloudfn.plugins.list();
 cloudfn.users.load();
 
-//cloudfn.api.test();
-
-//return;
 
 var pino        = require('pino');
 var pretty = pino.pretty()

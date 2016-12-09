@@ -1,6 +1,6 @@
 module.exports = function(opts, cb){
-	console.log("@core.auth opts:", opts);
-	console.log("@core.auth args:", this.args);
+	//console.log("@core.auth opts:", opts);
+	//console.log("@core.auth args:", this.args);
 
 	let key = this.args.query.key || this.args.params.key || '';
 

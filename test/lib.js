@@ -17,24 +17,23 @@ var random_number = parseInt( Math.random() * 1000);
 
 describe('lib.cloundfn.js Library', () => {
 
-	cloudfn.api.init();
+	cloudfn.plugins.load();
 	
 	describe('Plugins API', () => {
-		var plugs = cloudfn.api.plugins;
 		it('should be an object', (done) => {
-			plugs.should.be.an('object');
+			cloudfn.plugins.should.be.an('object');
 			done();
 		});
 		it('should contain "Core"', (done) => {
-			plugs.should.have.property('core');
+			cloudfn.plugins.should.have.property('core');
 			done();
 		});
 		it('should contain "Default"', (done) => {
-			plugs.should.have.property('default');
+			cloudfn.plugins.should.have.property('default');
 			done();
 		});
 		it('should contain "Premium"', (done) => {
-			plugs.should.have.property('premium');
+			cloudfn.plugins.should.have.property('premium');
 			done();
 		});
 	});
