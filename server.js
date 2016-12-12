@@ -68,7 +68,7 @@ app.get('/@/ls/:user/:hash', (req, res) => {
 
     let list = [];
     if( cloudfn.tasks.list[req.params.user] ){
-        list = Object.keys( cloudfn.tasks.list[req.params.user]);
+        list = Object.keys( cloudfn.tasks.list[req.params.user]).map( (scriptname) => req.params.user +'/'+ scriptname);
     }
 
     send_msg(res, "ls", list );
