@@ -5,3 +5,5 @@ tasks
 tasks/**/store.json
 *.log
 test-*
+users.json
+*.txt

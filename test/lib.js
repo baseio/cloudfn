@@ -13,6 +13,7 @@ var remote  	= 'http://localhost:3033';
 
 
 var random_number = parseInt( Math.random() * 1000);
+console.log("Using random number:", random_number);
 
 
 describe('lib.cloundfn.js Library', () => {
@@ -182,6 +183,8 @@ describe('Premium scripts', () => {
 					done();
 				});
 		});
+		
+		
 		it('GET /examples/fs?file=data.json should return: "{ok:true, msg:{random_number:'+ random_number +'}}"', (done) => {
 			chai.request(remote)
 				.get('/examples/fs?file=data.json')
@@ -208,6 +211,7 @@ describe('Premium scripts', () => {
 					done();
 				});
 		});
+		
 		
 	});
 

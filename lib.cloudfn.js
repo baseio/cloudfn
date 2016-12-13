@@ -1,6 +1,6 @@
 // js@base.io
 
-const VERSION 			= '0.0.1-r10';
+const VERSION 			= '0.0.1-r11';
 const TASKDIRECTORY 	= __dirname + '/tasks';
 const PLUGINSDIRECTORY 	= __dirname + '/lib.cloudfn.plugins';
 
@@ -109,20 +109,22 @@ module.exports.users = Users;
 
 const Utils = {
 
-	is_readable: (file, silent=true) => {
+	is_readable: (file, silent) => {
+		let quiet = silent || true;
 	    try {
 	        fs.accessSync(file, 'r');
 	        return true;
 	    }catch(e){
-	    	if( !silent) console.log("@utils is_readable(): Cant read file "+ file);
+	    	if( !quiet) console.log("@utils is_readable(): Cant read file "+ file);
 	        return false;
 	    }
 	},
 	
-	is_javascript: (file, silent=true) => {
+	is_javascript: (file, silent) => {
+		let quiet = silent || true;
 		var info = path.parse(file);
 		if( info.ext !== '.js' ){
-			if( !silent) console.log("@utils is_javascript(): Only '.js' files accepted. (Got '"+ info.ext +"')");
+			if( !quiet) console.log("@utils is_javascript(): Only '.js' files accepted. (Got '"+ info.ext +"')");
 			return false;
 		}
 		return true;
@@ -160,7 +162,8 @@ const Utils = {
 
 	getSafePath: function(filepath){
 		// Note: bound to {userpath} from Context
-		console.log("@Utils.getSafePath", this);
+		console.log("@Utils.getSafePath > filepath", filepath);
+		console.log("@Utils.getSafePath > userpath", this.userpath);
 
 		let parts = path.parse(filepath);
 		let dir   = parts.dir.replace(/\./g, '');

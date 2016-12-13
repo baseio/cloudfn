@@ -192,11 +192,11 @@ function add_routes( user, script, showRoutes=false){
     });
 
     if( add ){
-        app.get(url1, cloudfn.tasks.list[user][script].fn);
-        app.get(url2, cloudfn.tasks.list[user][script].fn);
+        app.get(url1, formidable(), cloudfn.tasks.list[user][script].fn);
+        app.get(url2, formidable(), cloudfn.tasks.list[user][script].fn);
 
-        app.post(url1, cloudfn.tasks.list[user][script].fn);
-        app.post(url2, cloudfn.tasks.list[user][script].fn);
+        app.post(url1, formidable(), cloudfn.tasks.list[user][script].fn);
+        app.post(url2, formidable(), cloudfn.tasks.list[user][script].fn);
     }
     if( showRoutes ) show_routes();
 
