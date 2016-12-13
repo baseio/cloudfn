@@ -9,7 +9,7 @@ chai.use(chaiHttp);
 const cloudfn = require('../lib.cloudfn.js');
 
 var remote  	= 'http://localhost:3033';
-var remote  	= 'https://cloudfn.stream';
+//var remote  	= 'https://cloudfn.stream';
 
 
 var random_number = parseInt( Math.random() * 1000);
@@ -24,8 +24,8 @@ var RUN_ECHO_TESTS			= true;
 var RUN_AUTH_KEYS_TESTS		= true;
 var RUN_AUTH_ORIGIN_TESTS	= true;
 var RUN_STORE_TESTS			= true;
-var RUN_WAIT_TESTS			= false;
-var RUN_REQUEST_TESTS		= false;
+var RUN_WAIT_TESTS			= true;
+var RUN_REQUEST_TESTS		= true;
 var RUN_REQUEST_FAST_TESTS	= true;
 var RUN_FS_TESTS			= true;
 
@@ -66,7 +66,7 @@ describe('Example scripts', () => {
 		it('GET /examples/scriptdata/pkey/pvalue123?qkey=qvalue456"', (done) => {
 			chai.request(remote)
 				.get('/examples/scriptdata/pkey/pvalue123?qkey=qvalue456').end((err,res) => {
-				console.log(res.body);
+				//console.log(res.body);
 				res.should.have.status(200);
 				res.body.should.be.a('object');
 				res.body.should.have.property('ok').eql(true);
@@ -163,7 +163,7 @@ describe('Example scripts', () => {
 				.get('/examples/auth-origin')
 				.set('referer', 'localhost')
 				.end((err,res) => {
-				console.log(res.body);
+				//console.log(res.body);
 				res.should.have.status(200);
 				res.body.should.be.a('object');
 				res.body.should.have.property('ok').eql(true);
@@ -171,7 +171,7 @@ describe('Example scripts', () => {
 			});
 		});
 		
-		/*
+		
 		it('GET /examples/auth-origin (from **fake** github.com) should return: "{ok:false, ...}"', (done) => {
 			chai.request(remote)
 				.get('/examples/auth-origin')
@@ -184,7 +184,6 @@ describe('Example scripts', () => {
 				done();
 			});
 		});
-		*/
 	
 	});
 	
@@ -227,8 +226,8 @@ describe('Example scripts', () => {
 
 		if( !RUN_WAIT_TESTS ) return;
 
-		var wait_time_1 = 4000 + parseInt( Math.random() * 4000);
-		var wait_time_2 = 4000 + parseInt( Math.random() * 8000);
+		var wait_time_1 = 4000 + parseInt( Math.random() * 2000);
+		var wait_time_2 = 4000 + parseInt( Math.random() * 3000);
 
 		it('GET /examples/wait?time='+ wait_time_1 +' should return after '+ wait_time_1 +'ms.}', function(done){
 			this.timeout(1000 + wait_time_1);
