@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "test": "mocha",
-    "start": "nodemon server.js --ignore users.json --ignore task* --ignore */data.json"
+    "start": "nodemon server.js --ignore users.json --ignore task* --ignore */data.json --ignore test/*"
   },
   "keywords": [],
   "author": "Jørgen Skogmo <js@base.io> (http://base.io/)",

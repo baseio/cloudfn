@@ -29,26 +29,16 @@ let tasks       = {};
 let port        = process.env.port || 3033;
 let app         = express();
 
-//app.options('*', cors()); // include before other routes
-
-/*
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-*/
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(cors());
-//app.use(formidable()); // enable pr route instead - aim to remove
+
 app.disable('x-powered-by');
 
 
 /// todo
 /// - logging (via pub-sub > file >> websocket)
-/// - add good things to context (via plugins?)
 
 app.listen(port, () => {
     console.log( chalk.yellow('Listining on port '), port);
@@ -60,6 +50,11 @@ app.get('/version', (req, res) => {
     res.end();
 });
 
+app.get('/id', (req, res) => {
+    res.status(200);
+    res.json({name:pack.name, version:pack.version});
+    res.end();
+});
 
 
 /// List the users' scripts
