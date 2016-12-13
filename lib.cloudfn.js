@@ -469,10 +469,6 @@ var Context = function(req, res, user, script){
 		this[key] = Plugins.default[key].bind(this);
 	});
 	
-	/*var r =  require("request");
-	this.jar	= r.jar;
-	this.cookie = r.cookie;*/
-
 	// Load or Mock Premium features
 
 	this.fs = {};
@@ -564,19 +560,104 @@ const Sandbox = {
 		Sandbox.console_trap = false;
 
 		//console.dir( apiref );
+		console.dir( Object.keys(this.process).sort() );
+
 	    
-	    var keep_process = ['nextTick', '_tickCallback', 'stdout', 'console', 'hrtime', 'emitWarning', 'env'];
 	    var env_bak = this.process.env;
+	    //var keep_process = ['nextTick', '_tickCallback', 'stdout', 'console', 'hrtime', 'emitWarning', 'env'];
+	    var keep_process = [
+  '_needImmediateCallback',
+  '_tickCallback',
+  'cwd',
+  'emitWarning',
+  'env',
+  'hrtime',
+  'nextTick',
+  'platform',
+  'stderr',
+  'stdout',
+
+  '_debugEnd',
+  '_debugPause',
+  '_debugProcess',
+  '_events',
+  '_eventsCount',
+  '_exiting',
+  '_fatalException',
+  '_getActiveHandles',
+  '_getActiveRequests',
+  '_kill',
+  '_linkedBinding',
+  '_maxListeners',
+  '_rawDebug',
+  '_setupDomainUse',
+  '_startProfilerIdleNotifier',
+  '_stopProfilerIdleNotifier',
+  '_tickDomainCallback',
+
+  'abort',
+  'arch',
+  'argv',
+  'argv0',
+  'assert',
+  'binding',
+  'chdir',
+  'config',
+  'cpuUsage',
+  'debugPort',
+  'dlopen',
+  'domain',
+  'execArgv',
+  'execPath',
+  'exit',
+  'features',
+  'getegid',
+  'geteuid',
+  'getgid',
+  'getgroups',
+  'getuid',
+  'initgroups',
+  'kill',
+  'mainModule',
+  'memoryUsage',
+  'moduleLoadList',
+  'openStdin',
+  'pid',
+  'reallyExit',
+  'release',
+  'setegid',
+  'seteuid',
+  'setgid',
+  'setgroups',
+  'setuid',
+  'stdin',
+  'title',
+  'umask',
+  'uptime',
+  'version',
+  'versions'
+  ];
+	    
 	    Object.keys(this.process).map( (key) => {
-	        //if( keep_process.indexOf(key) < 0 ) delete this.process[key];
+	       // if( keep_process.indexOf(key) < 0 ) delete this.process[key];
 	    });
 	    /// PM2 relies on env.MODULE_DEBUG
 	    this.process.env = {MODULE_DEBUG:env_bak.MODULE_DEBUG};
 
 
-	    var keep_this = ['console', 'process', 'Buffer', 'setImmediate'];
+	    var delete_from_process = ['abort', 'kill', 'chdir', 'disconnect', 'exit', 
+	    'getegid', 'geteuid', 'getgid', 'getgroups', 'getuid', 'initgroups', 
+	    'setegid', 'seteuid', 'setgid', 'setgroups', 'setuid'];
+	    delete_from_process.map( (key) => {
+	    	delete this.process[key];
+	    });
+
+
+
+
+	    var keep_this = ['console', 'process', 'Buffer', 'setImmediate', 'clearTimeout', 'setTimeout'];
 	    Object.keys(this).map( (key) => {
-	        //if( keep_this.indexOf(key) < 0 ) delete this[key];
+	       if( keep_this.indexOf(key) < 0 ) delete this[key];
 	    });
 	    //console.dir(this, {colors:true});
 	    //console.dir(arguments, {colors:true});

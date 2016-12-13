@@ -52,7 +52,14 @@ app.get('/version', (req, res) => {
 
 app.get('/id', (req, res) => {
     res.status(200);
-    res.json({name:pack.name, version:pack.version});
+    res.json({
+        name:pack.name, 
+        version:pack.version,
+        uptime:process.uptime(),
+        versions:process.versions,
+        platform:process.platform,
+        arch: process.arch
+    });
     res.end();
 });
 

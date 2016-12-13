@@ -18,15 +18,16 @@ console.log("Using random number:", random_number);
 
 /// Suites
 
-var RUN_SCRIPTDATA_TESTS	= false;
-var RUN_ECHO_TESTS			= false;
-var RUN_AUTH_KEYS_TESTS		= false;
-var RUN_AUTH_ORIGIN_TESTS	= false;
-var RUN_STORE_TESTS			= false;
+var RUN_SCRIPTDATA_TESTS	= true;
+var RUN_ARGS_TESTS			= true;
+var RUN_ECHO_TESTS			= true;
+var RUN_AUTH_KEYS_TESTS		= true;
+var RUN_AUTH_ORIGIN_TESTS	= true;
+var RUN_STORE_TESTS			= true;
 var RUN_WAIT_TESTS			= false;
 var RUN_REQUEST_TESTS		= false;
 var RUN_REQUEST_FAST_TESTS	= true;
-var RUN_FS_TESTS			= false;
+var RUN_FS_TESTS			= true;
 
 
 
@@ -304,18 +305,38 @@ describe('Request plugin', () => {
 });
 
 
+describe('Args', () => {
+		
+	if( !RUN_ARGS_TESTS ) return;
+	
+	it('GET /examples/args', function(done) {
+		chai.request(remote)
+			.get('/examples/args')
+			.end((err,res) => {
+				//console.log("res.body", res.body);
+				res.should.have.status(200);
+				res.body.should.be.a('object');
+				res.body.should.have.property('ok').eql(true);
+				done();
+			});
+	});
+
+});
+
+
 describe('Request plugin (Fast)', () => {
 		
 	if( !RUN_REQUEST_FAST_TESTS ) return;
 	
-	it('GET /examples/request?mode=FAST should work', function(done) {
+	it('GET /examples/request?mode=LOCAL should work', function(done) {
 		chai.request(remote)
-			.get('/examples/request?mode=FAST')
+			.get('/examples/request?mode=LOCAL')
 			.end((err,res) => {
-				console.log("res.body", res.body);
+				//console.log("res.body", res.body);
 				res.should.have.status(200);
 				res.body.should.be.a('object');
-				//res.body.should.have.property('msg').eql('SOCKET RESPONSE TIMEOUT');
+				res.body.should.have.property('name');
+				res.body.should.have.property('version');
 				done();
 			});
 	});
