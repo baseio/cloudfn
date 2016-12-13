@@ -9,7 +9,7 @@ chai.use(chaiHttp);
 const cloudfn = require('../lib.cloudfn.js');
 
 var remote  	= 'http://localhost:3033';
-//var remote  	= 'https://cloudfn.stream';
+var remote  	= 'https://cloudfn.stream';
 
 
 var random_number = parseInt( Math.random() * 1000);
