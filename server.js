@@ -16,6 +16,8 @@ cloudfn.plugins.load();
 cloudfn.plugins.load_extended();
 cloudfn.plugins.list();
 
+process.title = 'cloudfn';
+
 
 var pino        = require('pino');
 var pretty = pino.pretty()
