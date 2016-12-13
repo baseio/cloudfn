@@ -41,6 +41,7 @@ describe('lib.cloundfn.js Library', () => {
 
 });
 
+/*
 describe('Example scripts', () => {
 
 	
@@ -163,9 +164,33 @@ describe('Example scripts', () => {
 
 	});
 });
+*/
+
+describe('Default plugin scripts', () => {
+	
+	describe('Request' () => {
+		var plugs = cloudfn.api.plugins;
+
+		it('POST /examples/fs should return: "{ok:true, msg:WRITE_FILE_SUCCESS}"', (done) => {
+			chai.request(remote)
+				.post('/examples/fs')
+				.field('file', 'data.json')
+				.field('data', JSON.stringify({'random_number':random_number}))
+				.end((err,res) => {
+					//console.log(res.body);
+					res.should.have.status(200);
+					res.body.should.be.a('object');
+					res.body.should.have.property('ok').eql(true);
+					res.body.should.have.property('msg').eql('WRITE_FILE_SUCCESS');
+					done();
+				});
+		});
+	});
+});
 
 describe('Premium scripts', () => {
 	
+	/*
 	describe('FS', () => {
 		var plugs = cloudfn.api.plugins;
 
@@ -214,6 +239,7 @@ describe('Premium scripts', () => {
 		
 		
 	});
+	*/
 
 	/*
 	describe('Webhook (Premium)', () => {

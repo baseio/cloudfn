@@ -7,13 +7,14 @@ var moment      = require('moment');
 var bodyParser  = require('body-parser');
 var formidable  = require('express-formidable');
 var path        = require('path');
-
-var cloudfn     = require('./lib.cloudfn.js');
 var pack        = require('./package.json');
 
-cloudfn.plugins.load();
-cloudfn.plugins.list();
+var cloudfn     = require('./lib.cloudfn.js');
+
 cloudfn.users.load();
+cloudfn.plugins.load();
+cloudfn.plugins.load_extended();
+cloudfn.plugins.list();
 
 
 var pino        = require('pino');
@@ -204,13 +205,19 @@ function add_routes( user, script, showRoutes=false){
 }
 
 function show_routes(){
+    var r = [];
     app._router.stack.map( (layer) => {
         if( layer.route ){
             let m = cloudfn.utils.rightPad( Object.keys(layer.route.methods)[0].toUpperCase(), 5);
             let p = layer.route.path;
-            console.log(m, p);
+            //console.log(m, p);
+
+            let cp = p.replace(/\*/g, '');
+            if( cp.slice(-1) === '/') cp = cp.slice(0,-1);
+            if( r.indexOf(cp) < 0 ) r.push(cp);
         }
     });
+    console.log("Routes:", r.sort() );
 }
 
 // as we want to keep the lib.cloudfn.js library clean,
@@ -236,7 +243,7 @@ function load_tasks_from_file(){
         }
     });
 
-    console.dir(cloudfn.tasks.list, {colors:true});
+    //console.dir(cloudfn.tasks.list, {colors:true});
     show_routes();
 }
 
