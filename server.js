@@ -34,7 +34,7 @@ let app         = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text());
-app.use(cors());
+//app.use(cors());
 
 app.disable('x-powered-by');
 
