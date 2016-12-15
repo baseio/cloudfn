@@ -154,6 +154,23 @@ app.post('/@/a/:user/:hash', formidable(), (req, res) => {
     });
 });
 
+app.post('/@/f/:user/:hash/:app', formidable(), (req, res) => {
+    log.info({endpoint:'f', user:req.params.user, app:req.app, files:req.files});
+    
+    if( !cloudfn.users.verify(req.params.user, req.params.hash) ){
+        return send_msg(res, 'deny');
+    }
+
+    cloudfn.files.add(user, script, req.files, (ok) => {
+        if( ok ){
+            send_msg(res, 'FILE_UPLOAD_SUCCESS');
+        }else{
+            send_msg(res, 'FILE_UPLOAD_ERROR');
+        }
+    })
+});
+
+
 
 // https://cloudfn.stream/logs/js/counter/346PU346PUBC45723P7WB45884548EPQ
 app.get('/@/log/:user/:app/:hash', (req, res) => {
