@@ -106,7 +106,7 @@ server {
 		# proxy_cache_bypass $http_upgrade;
 
 		root /var/www/cloudfn-system/tasks;
-		try_files $uri $uri/ @cloudfnProxy;
+		try_files $uri @cloudfnProxy;
 	}
 }
 
