@@ -68,8 +68,10 @@ server {
 	}
 
 	location ~ \. {
-		root /var/www/cloudfn-system/tasks;
-		try_files $uri @cloudfnProxy;
+		#root /var/www/cloudfn-system/tasks;
+		#try_files $uri @cloudfnProxy;
+		root /var/www/cloudfn-system/static;
+		#try_files $uri @cloudfnProxy;
 	}
 
 
