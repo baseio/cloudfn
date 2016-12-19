@@ -99,7 +99,7 @@ server {
 
 	location / {
 		root /var/www/cloudfn-system/static;
-		try_files $uri @cloudfnProxy;
+		try_files $uri $uri/ @cloudfnProxy;
 	}
 }
 
