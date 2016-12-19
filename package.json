@@ -10,7 +10,7 @@
   },
   "keywords": [],
   "author": "Jørgen Skogmo <js@base.io> (http://base.io/)",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "dependencies": {
     "body-parser": "^1.15.2",
     "chalk": "^1.1.3",
