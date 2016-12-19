@@ -139,5 +139,5 @@ server {
 	location ~ /.well-known {
 		allow all;
 	}
+    root /var/www/cloudfn-system/static;
 }
-
