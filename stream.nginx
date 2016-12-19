@@ -56,28 +56,7 @@ server {
     }
 
     location @cloudfnProxy {
-		proxy_pass http://localhost:3033;
-		proxy_http_version 1.1;
-		proxy_set_header Upgrade $http_upgrade;
-		proxy_set_header Connection 'upgrade';
-		proxy_set_header Host $host;
-		proxy_set_header X-Http-Origin $http_origin;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_cache_bypass $http_upgrade;
-	}
-
-	location ~ \. {
-		#root /var/www/cloudfn-system/tasks;
-		#try_files $uri @cloudfnProxy;
-		root /var/www/cloudfn-system/static;
-		#try_files $uri @cloudfnProxy;
-	}
-
-
-	location / {
-
-		if ($request_method = 'OPTIONS') {
+    	if ($request_method = 'OPTIONS') {
 			add_header 'Access-Control-Allow-Origin' '*';
 			add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
 			
@@ -101,21 +80,6 @@ server {
 			add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
 		}
 
-
-		# proxy_pass http://localhost:3033;
-		# proxy_http_version 1.1;
-		# proxy_set_header Upgrade $http_upgrade;
-		# proxy_set_header Connection 'upgrade';
-		# proxy_set_header Host $host;
-		# proxy_set_header X-Http-Origin $http_origin;
-		# proxy_set_header X-Real-IP $remote_addr;
-		# proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		# proxy_cache_bypass $http_upgrade;
-
-
-		#root /var/www/cloudfn-system/tasks;
-		#try_files $uri @cloudfnProxy;
-
 		proxy_pass http://localhost:3033;
 		proxy_http_version 1.1;
 		proxy_set_header Upgrade $http_upgrade;
@@ -125,6 +89,17 @@ server {
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 		proxy_cache_bypass $http_upgrade;
+	}
+
+	#location ~ \. {
+	#	root /var/www/cloudfn-system/tasks;
+	#	try_files $uri @cloudfnProxy;
+	#}
+
+
+	location / {
+		root /var/www/cloudfn-system/static;
+		try_files $uri @cloudfnProxy;
 	}
 }
 
