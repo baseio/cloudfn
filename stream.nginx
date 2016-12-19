@@ -127,6 +127,7 @@ server {
     }
 }
 
+# cloudfn.net 
 
 server {
     listen 80;
@@ -140,4 +141,8 @@ server {
 	error_log /var/log/nginx/cloudfn.net-error.log;
 
 	error_page  404  /404.html;
+
+	location ~ /.well-known {
+		allow all;
+	}
 }
