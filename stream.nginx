@@ -131,7 +131,7 @@ server {
 server {
     listen 80;
     server_name cloudfn.net;
-    root /var/www/cloudfn-system/static
+    root /var/www/cloudfn-system/static;
 
     server_tokens off;
 	client_max_body_size 9M;
