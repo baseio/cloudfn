@@ -1,8 +1,9 @@
 .vscode
 **/.DS_Store
 node_modules
-tasks
+tasks/*
 tasks/**/store.json
+!tasks/examples
 *.log
 test-*
 users.json
